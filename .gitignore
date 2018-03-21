@@ -9,3 +9,5 @@ code/tools/lcc/src/dagcheck.c
 *.db
 *.bat
 code/.vs/SaberMod/v15/.suo
+*.opendb
+*.suo
