@@ -5,3 +5,5 @@ code/tools/lcc/src/dagcheck.c
 *.asm
 *.qvm
 *.map
+*.db
+*.db
