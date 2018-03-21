@@ -7,3 +7,5 @@ code/tools/lcc/src/dagcheck.c
 *.map
 *.db
 *.db
+*.bat
+code/.vs/SaberMod/v15/.suo

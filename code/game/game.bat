@@ -105,3 +105,5 @@ copy ..\g_syscalls.asm .
 @set savedpath=
 
 cd ..
+
+pause
