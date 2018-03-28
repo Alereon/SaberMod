@@ -2724,7 +2724,7 @@ static void Cmd_Ready_f(gentity_t *ent)
 	//char *status;
 	if (level.warmupTime) {
 		ent->client->pers.ready = (qboolean)!ent->client->pers.ready;
-		trap_SendServerCommand(ent - g_entities, va("print \"You are: %s\n\"", ent->client->pers.ready ? "ready" : "unready"));
+		trap_SendServerCommand(ent - g_entities, va("print \"You are: %s\n\"", ent->client->pers.ready ? "^2ready" : "^1unready"));
 		G_UpdateClientReadyFlags();
 	}
 }

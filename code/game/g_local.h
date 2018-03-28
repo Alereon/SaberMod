@@ -1289,6 +1289,7 @@ extern	vmCvar_t	g_timeoutLimit;
 extern	vmCvar_t	g_requireClientside;
 extern	vmCvar_t	g_allowRefVote;
 extern	vmCvar_t	g_ForceAffectTeam;
+extern	vmCvar_t	g_FFScoreRules;
 
 
 void	trap_Print( const char *fmt );

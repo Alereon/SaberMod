@@ -1803,13 +1803,35 @@ static void G_ScoreTeamKill( gentity_t *self, gentity_t *attacker, meansOfDeath_
 		}
 		else
 		{
-			AddScore( attacker, self->r.currentOrigin, -1 );
+			if (level.gametype == GT_TEAM && g_FFScoreRules.integer)
+			{
+				AddScore(&g_entities[otherClNum], self->r.currentOrigin, 1);
+			}
+			else
+			{
+				AddScore(attacker, self->r.currentOrigin, -1);
+			}
 		}
 	}
 	else
 	{
-		if ( meansOfDeath != MOD_LEAVE )
-			AddScore( attacker, self->r.currentOrigin, -1 );
+		if (level.gametype == GT_TEAM && g_FFScoreRules.integer)
+		{
+			if (attacker->client->ps.persistant[PERS_TEAM] == TEAM_RED)
+			{
+				level.teamScores[TEAM_BLUE]++;
+			}
+			else
+			{
+				level.teamScores[TEAM_RED]++;
+			}
+
+			CalculateRanks();
+		}
+		else
+		{
+			AddScore(attacker, self->r.currentOrigin, -1);
+		}
 	}
 	if (level.gametype == GT_JEDIMASTER)
 	{
