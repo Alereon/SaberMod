@@ -165,6 +165,7 @@ vmCvar_t	g_requireClientside;
 vmCvar_t	g_allowRefVote;
 vmCvar_t	g_ForceAffectTeam;
 vmCvar_t	g_FFScoreRules;
+vmCvar_t	g_PushItems;
 
 // bk001129 - made static to avoid aliasing
 static cvarTable_t gameCvarTable[] = {
@@ -336,6 +337,7 @@ static cvarTable_t gameCvarTable[] = {
 	{ &g_allowRefVote, "g_allowRefVote", "-1", CVAR_ARCHIVE, 0, qfalse },
 	{ &g_ForceAffectTeam, "g_ForceAffectTeam", "0", CVAR_ARCHIVE, 0, qtrue },
 	{ &g_FFScoreRules, "g_FFScoreRules", "0", CVAR_ARCHIVE, 0, qtrue },
+	{ &g_PushItems, "g_PushItems", "0", CVAR_ARCHIVE, 0, qtrue },
 };
 
 void G_InitGame					( int levelTime, int randomSeed, int restart );

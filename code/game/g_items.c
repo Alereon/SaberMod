@@ -1355,6 +1355,14 @@ void RespawnItem( gentity_t *ent ) {
 			;
 	}
 
+	if (g_PushItems.integer)
+	{
+		VectorCopy(ent->origOrigin, ent->s.origin);
+		VectorCopy(ent->origOrigin, ent->s.pos.trBase);
+		VectorCopy(ent->origOrigin, ent->s.apos.trBase);
+		VectorCopy(ent->origOrigin, ent->r.currentOrigin);
+	}
+
 	ent->r.contents = CONTENTS_TRIGGER;
 	//ent->s.eFlags &= ~EF_NODRAW;
 	ent->s.eFlags &= ~(EF_NODRAW | EF_ITEMPLACEHOLDER);
@@ -1380,6 +1388,17 @@ void RespawnItem( gentity_t *ent ) {
 	G_AddEvent( ent, EV_ITEM_RESPAWN, 0 );
 
 	ent->nextthink = 0;
+}
+
+void ResetItem(gentity_t *ent)
+{ // Deathspike: Reset item func
+
+	VectorCopy(ent->origOrigin, ent->s.origin);
+	VectorCopy(ent->origOrigin, ent->s.pos.trBase);
+	VectorCopy(ent->origOrigin, ent->s.apos.trBase);
+	VectorCopy(ent->origOrigin, ent->r.currentOrigin);
+
+	trap_LinkEntity(ent);
 }
 
 
@@ -1910,6 +1929,12 @@ void FinishSpawningItem( gentity_t *ent ) {
 	}
 	*/
 
+	if (!ent->spawnedBefore)
+	{
+		ent->spawnedBefore = qtrue;
+		VectorCopy(tr.endpos, ent->origOrigin);
+	}
+
 	trap_LinkEntity (ent);
 }
 
@@ -2074,6 +2099,10 @@ void G_SpawnItem (gentity_t *ent, gitem_t *item) {
 	RegisterItem( item );
 	if ( G_ItemDisabled(item) )
 		return;
+
+	if (ent->spawnedBefore)
+		VectorCopy(ent->origOrigin, ent->s.origin);
+	ent->itemtype = item->giType;
 
 	ent->item = item;
 	// some movers spawn on the second frame, so delay item

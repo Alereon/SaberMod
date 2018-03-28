@@ -337,6 +337,11 @@ struct gentity_s {
 	// can be ommited by dueling players
 	int			blameEntityNum;
 	unsigned	dimension;
+
+	//g_PushItems
+	vec3_t		origOrigin;
+	qboolean    spawnedBefore;
+	int			itemtype;
 };
 
 #define DAMAGEREDIRECT_HEAD		1
@@ -722,6 +727,7 @@ void ItemUse_MedPack(gentity_t *ent);
 void G_CheckTeamItems( void );
 void G_RunItem( gentity_t *ent );
 void RespawnItem( gentity_t *ent );
+void ResetItem(gentity_t *ent);
 
 void UseHoldableItem( gentity_t *ent );
 void PrecacheItem (gitem_t *it);
@@ -1290,6 +1296,7 @@ extern	vmCvar_t	g_requireClientside;
 extern	vmCvar_t	g_allowRefVote;
 extern	vmCvar_t	g_ForceAffectTeam;
 extern	vmCvar_t	g_FFScoreRules;
+extern	vmCvar_t	g_PushItems;
 
 
 void	trap_Print( const char *fmt );

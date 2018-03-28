@@ -2832,7 +2832,7 @@ void ForceThrow( gentity_t *self, qboolean pull )
 			continue;
 		if ( ent->s.eType != ET_MISSILE )
 		{
-			if ( ent->s.eType != ET_ITEM )
+			if ( g_PushItems.integer || ent->s.eType != ET_ITEM )
 			{
 				//FIXME: need pushable objects
 				if ( Q_stricmp( "func_button", ent->classname ) == 0 )
@@ -2850,18 +2850,21 @@ void ForceThrow( gentity_t *self, qboolean pull )
 					}
 					if ( !ent->client )
 					{
-						if ( Q_stricmp( "lightsaber", ent->classname ) != 0 )
-						{//not a lightsaber
-							if ( Q_stricmp( "func_door", ent->classname ) != 0 || !(ent->spawnflags & 2/*MOVER_FORCE_ACTIVATE*/) )
-							{//not a force-usable door
-								if ( Q_stricmp( "limb", ent->classname ) )
-								{//not a limb
+						if (!g_PushItems.integer)
+						{
+							if (Q_stricmp("lightsaber", ent->classname) != 0)
+							{//not a lightsaber
+								if (Q_stricmp("func_door", ent->classname) != 0 || !(ent->spawnflags & 2/*MOVER_FORCE_ACTIVATE*/))
+								{//not a force-usable door
+									if (Q_stricmp("limb", ent->classname))
+									{//not a limb
+										continue;
+									}
+								}
+								else if (ent->moverState != MOVER_POS1 && ent->moverState != MOVER_POS2)
+								{//not at rest
 									continue;
 								}
-							}
-							else if ( ent->moverState != MOVER_POS1 && ent->moverState != MOVER_POS2 )
-							{//not at rest
-								continue;
 							}
 						}
 					}
@@ -3142,6 +3145,37 @@ void ForceThrow( gentity_t *self, qboolean pull )
 				else
 				{
 					G_ReflectMissile( self, push_list[x], forward );
+				}
+			}
+			else if (g_PushItems.integer && push_list[x]->itemtype != IT_WEAPON && push_list[x]->s.eType == ET_ITEM)//rolling and stationary thermal detonators are dealt with below
+			{
+				push_list[x]->nextthink = level.time + 30000;
+				push_list[x]->think = ResetItem;//incase it falls off a cliff
+
+				if (pull)
+				{//pull the item
+
+					push_list[x]->s.pos.trType = TR_GRAVITY;
+					push_list[x]->s.apos.trType = TR_GRAVITY;
+					VectorScale(forward, -650.0f, push_list[x]->s.pos.trDelta);
+					VectorScale(forward, -650.0f, push_list[x]->s.apos.trDelta);
+					push_list[x]->s.pos.trTime = level.time;		// move a bit on the very first frame
+					push_list[x]->s.apos.trTime = level.time;		// move a bit on the very first frame
+					VectorCopy(push_list[x]->r.currentOrigin, push_list[x]->s.pos.trBase);
+					VectorCopy(push_list[x]->r.currentOrigin, push_list[x]->s.apos.trBase);
+					push_list[x]->s.eFlags = EF_BOUNCE_HALF;
+				}
+				else
+				{
+					push_list[x]->s.pos.trType = TR_GRAVITY;
+					push_list[x]->s.apos.trType = TR_GRAVITY;
+					VectorScale(forward, 650.0f, push_list[x]->s.pos.trDelta);
+					VectorScale(forward, 650.0f, push_list[x]->s.apos.trDelta);
+					push_list[x]->s.pos.trTime = level.time;		// move a bit on the very first frame
+					push_list[x]->s.apos.trTime = level.time;		// move a bit on the very first frame
+					VectorCopy(push_list[x]->r.currentOrigin, push_list[x]->s.pos.trBase);
+					VectorCopy(push_list[x]->r.currentOrigin, push_list[x]->s.apos.trBase);
+					push_list[x]->s.eFlags = EF_BOUNCE_HALF;
 				}
 			}
 			else if ( !Q_stricmp( "func_door", push_list[x]->classname ) && (push_list[x]->spawnflags&2) )
