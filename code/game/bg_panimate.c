@@ -4,7 +4,7 @@ This file is part of SaberMod - Star Wars Jedi Knight II: Jedi Outcast mod.
 
 Copyright (C) 1999-2000 Id Software, Inc.
 Copyright (C) 1999-2002 Activision
-Copyright (C) 2015-2018 Witold Pilat <witold.pilat@gmail.com>
+Copyright (C) 2015-2019 Witold Pilat <witold.pilat@gmail.com>
 
 This program is free software; you can redistribute it and/or modify it
 under the terms and conditions of the GNU General Public License,
@@ -1035,22 +1035,18 @@ void PM_SetTorsoAnimTimer( int time )
 	}
 }
 
-void BG_SaberStartTransAnim( forceLevel_t saberAnimLevel, animNumber_t anim, float *animSpeed )
+void BG_SaberStartTransAnim( animNumber_t anim, float *animSpeed )
 {
 	assert( anim < MAX_TOTALANIMATIONS);
 
-	if ( ( anim >= BOTH_T1_BR__R && anim <= BOTH_T1_BL_TL ) ||
-		( anim >= BOTH_T2_BR__R && anim <= BOTH_T2_BL_TL ) ||
-		( anim >= BOTH_T3_BR__R && anim <= BOTH_T3_BL_TL ) )
+	// fau - prevent esp saber style cheat from working
+	if (anim >= BOTH_T1_BR__R && anim <= BOTH_T1_BL_TL)
 	{
-		if ( saberAnimLevel == FORCE_LEVEL_1 )
-		{
-			*animSpeed *= 1.5f;
-		}
-		else if ( saberAnimLevel == FORCE_LEVEL_3 )
-		{
-			*animSpeed *= 0.75f;
-		}
+		*animSpeed *= 1.5f;
+	}
+	else if (anim >= BOTH_T3_BR__R && anim <= BOTH_T3_BL_TL)
+	{
+		*animSpeed *= 0.75f;
 	}
 }
 
@@ -1073,7 +1069,7 @@ void PM_SetAnimFinal(int setAnimParts, animNumber_t anim, int setAnimFlags, int 
 	//NOTE: Setting blendTime here breaks actual blending..
 	//blendTime = 0;
 
-	BG_SaberStartTransAnim(pm->ps->fd.saberAnimLevel, anim, &editAnimSpeed);
+	BG_SaberStartTransAnim(anim, &editAnimSpeed);
 
 	// Set torso anim
 	if (setAnimParts & SETANIM_TORSO)

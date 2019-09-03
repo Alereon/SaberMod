@@ -4,7 +4,7 @@ This file is part of SaberMod - Star Wars Jedi Knight II: Jedi Outcast mod.
 
 Copyright (C) 1999-2000 Id Software, Inc.
 Copyright (C) 1999-2002 Activision
-Copyright (C) 2015-2018 Witold Pilat <witold.pilat@gmail.com>
+Copyright (C) 2015-2019 Witold Pilat <witold.pilat@gmail.com>
 
 This program is free software; you can redistribute it and/or modify it
 under the terms and conditions of the GNU General Public License,
@@ -396,7 +396,7 @@ typedef int		clipHandle_t;
 #define	MAX_OSPATH			256		// max length of a filesystem pathname
 #endif
 
-#define MAX_NETNAME			36		// max length of a client name + 1
+#define MAX_NETNAME			64		// max length of a client name + 1
 #define MAX_NAME_LEN		28		// max length of a printed client name
 #define	MAX_NAME_LENGTH		32		// arbitrary max string length used here and there
 #define MAX_TEAMNAME		32      // max length of a team name "spectators" but also g_blueTeam

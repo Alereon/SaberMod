@@ -4,7 +4,7 @@ This file is part of SaberMod - Star Wars Jedi Knight II: Jedi Outcast mod.
 
 Copyright (C) 1999-2000 Id Software, Inc.
 Copyright (C) 1999-2002 Activision
-Copyright (C) 2015-2018 Witold Pilat <witold.pilat@gmail.com>
+Copyright (C) 2015-2019 Witold Pilat <witold.pilat@gmail.com>
 
 This program is free software; you can redistribute it and/or modify it
 under the terms and conditions of the GNU General Public License,
@@ -731,10 +731,11 @@ void G_UpdateClientReadyFlags( void ) {
 	for (i = 0; i < level.maxclients; i++) {
 		gentity_t *ent = &g_entities[i];
 
-		if (ent->inuse) {
-			if (ent->r.svFlags & SVF_BOT || ent->client->pers.ready) {
-				mask |= 1 << i;
-			}
+		if (ent->inuse &&
+			ent->client->pers.connected == CON_CONNECTED &&
+			ent->client->pers.ready)
+		{
+			mask |= 1 << i;
 		}
 	}
 
@@ -755,11 +756,13 @@ void ClientIntermissionThink( gclient_t *client ) {
 	// swap and latch button actions
 	client->oldbuttons = client->buttons;
 	client->buttons = client->pers.cmd.buttons;
-	if ( client->buttons & ( BUTTON_ATTACK | BUTTON_USE_HOLDABLE ) & ( client->oldbuttons ^ client->buttons ) ) {
-		// this used to be an ^1 but once a player says ready, it should stick
-		if (!client->pers.ready) {
-			client->pers.ready = qtrue;
-			G_UpdateClientReadyFlags();
+	if ( level.gametype != GT_TOURNAMENT || level.duelExit ) {
+		if ( client->buttons & ( BUTTON_ATTACK | BUTTON_USE_HOLDABLE ) & ( client->oldbuttons ^ client->buttons ) ) {
+			// this used to be an ^1 but once a player says ready, it should stick
+			if (!client->pers.ready) {
+				client->pers.ready = qtrue;
+				G_UpdateClientReadyFlags();
+			}
 		}
 	}
 }
@@ -1095,6 +1098,10 @@ void G_Respawn( gentity_t *ent ) {
 static void G_FinishDuel ( gentity_t *ent )
 {
 	ent->dimension = DEFAULT_DIMENSION;
+	// remove once all non-player entities use dimensions
+	if (ent->client->ps.saberEntityNum != ENTITYNUM_NONE) {
+		g_entities[ent->client->ps.saberEntityNum].dimension = DEFAULT_DIMENSION;
+	}
 	ent->client->ps.duelInProgress = qfalse;
 	ent->client->duelStarted = qfalse;
 	G_AddEvent(ent, EV_PRIVATE_DUEL, 0);
@@ -1822,6 +1829,23 @@ void ClientThink_real( gentity_t *ent ) {
 	G_UpdateClientBroadcasts ( ent );
 }
 
+void ClientThink_paused( gentity_t *ent ) {
+	gclient_t	*client = ent->client;
+	usercmd_t	*cmd = &client->pers.cmd;
+
+	// Pmove substitute, should be Pmove_paused
+	client->ps.commandTime = cmd->serverTime;
+	if ( cmd->buttons & BUTTON_TALK ) {
+		ent->s.eFlags |= EF_TALK;
+		client->ps.eFlags |= EF_TALK;
+	} else {
+		ent->s.eFlags &= ~EF_TALK;
+		client->ps.eFlags &= ~EF_TALK;
+	}
+	// force the same view angles as before
+	SetClientViewAngle(ent, client->ps.viewangles);
+}
+
 /*
 ==================
 G_CheckClientTimeouts
@@ -1873,23 +1897,42 @@ void ClientThink( int clientNum ) {
 	client->lastCmdTime = level.time;
 
 	if (level.unpauseTime > level.time) {
-		client->ps.commandTime = client->pers.cmd.serverTime;
-		SetClientViewAngle(ent, client->ps.viewangles);
-		return;
-	}
-
-	if ( !(ent->r.svFlags & SVF_BOT) && !g_synchronousClients.integer ) {
+		ClientThink_paused( ent );
+	} else if ( !(ent->r.svFlags & SVF_BOT) && !g_synchronousClients.integer ) {
 		ClientThink_real( ent );
 	}
 }
 
 
 void G_RunClient( gentity_t *ent ) {
-	if ( !(ent->r.svFlags & SVF_BOT) && !g_synchronousClients.integer ) {
-		return;
+	gclient_t	*client = ent->client;
+	usercmd_t	*cmd = &client->pers.cmd;
+
+	if ( (ent->r.svFlags & SVF_BOT) || g_synchronousClients.integer )
+	{
+		cmd->serverTime = level.time;
+
+		ClientThink_real( ent );
 	}
-	ent->client->pers.cmd.serverTime = level.time;
-	ClientThink_real( ent );
+	else if ( g_antiWarp.integer > 1 &&
+		client->lastCmdTime < level.time - g_antiWarpTime.integer &&
+//		client->lastCmdTime > level.time - 1000 && //
+		client->lastCmdTime > 0 &&
+		client->pers.connected == CON_CONNECTED &&
+		client->sess.spectatorState == SPECTATOR_NOT &&
+		client->ps.pm_type != PM_DEAD)
+	{
+		// create a fake user command to make him move, causing client
+		// prediction error for a warping player
+		cmd->serverTime = level.time + (cmd->serverTime - client->lastCmdTime);
+		cmd->buttons = 0;
+		cmd->generic_cmd = 0;	// let go any force power eg grip
+		cmd->forwardmove = 0;
+		cmd->rightmove = 0;
+		cmd->upmove = 0;
+
+		ClientThink_real( ent );
+	}
 }
 
 
@@ -2042,10 +2085,10 @@ void ClientEndFrame( gentity_t *ent ) {
 	P_DamageFeedback (ent);
 
 	// add the EF_CONNECTION flag if we haven't gotten commands recently
-	if ( level.time - ent->client->lastCmdTime > 1000 ) {
-		ent->s.eFlags |= EF_CONNECTION;
+	if ( g_antiWarp.integer && client->lastCmdTime < level.time - g_antiWarpTime.integer ) {
+		client->ps.eFlags |= EF_CONNECTION;
 	} else {
-		ent->s.eFlags &= ~EF_CONNECTION;
+		client->ps.eFlags &= ~EF_CONNECTION;
 	}
 
 	ent->client->ps.stats[STAT_HEALTH] = ent->health;	// FIXME: get rid of ent->health...

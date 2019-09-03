@@ -4,7 +4,7 @@ This file is part of SaberMod - Star Wars Jedi Knight II: Jedi Outcast mod.
 
 Copyright (C) 1999-2000 Id Software, Inc.
 Copyright (C) 1999-2002 Activision
-Copyright (C) 2015-2018 Witold Pilat <witold.pilat@gmail.com>
+Copyright (C) 2015-2019 Witold Pilat <witold.pilat@gmail.com>
 
 This program is free software; you can redistribute it and/or modify it
 under the terms and conditions of the GNU General Public License,
@@ -3990,6 +3990,13 @@ static bind_t g_bindings[] =
 	{"cg_thirdperson !",-1,					-1,		-1,	-1},
 	{"saveDemo",		-1,					-1,		-1,	-1},
 	{"saveDemoLast",	-1,					-1,		-1,	-1},
+
+	// SaberMod
+	{"follow first",	-1,					-1,		-1,	-1},
+	{"nextspecmode",	-1,					-1,		-1,	-1},
+	{"seek +5s",		-1,					-1,		-1,	-1},
+	{"seek -15s",		-1,					-1,		-1,	-1},
+	{"ready",			A_F8,				-1,		-1,	-1},
 };
 
 

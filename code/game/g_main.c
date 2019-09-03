@@ -4,7 +4,7 @@ This file is part of SaberMod - Star Wars Jedi Knight II: Jedi Outcast mod.
 
 Copyright (C) 1999-2000 Id Software, Inc.
 Copyright (C) 1999-2002 Activision
-Copyright (C) 2015-2018 Witold Pilat <witold.pilat@gmail.com>
+Copyright (C) 2015-2019 Witold Pilat <witold.pilat@gmail.com>
 
 This program is free software; you can redistribute it and/or modify it
 under the terms and conditions of the GNU General Public License,
@@ -163,6 +163,11 @@ vmCvar_t	g_macroscan;
 vmCvar_t	g_timeoutLimit;
 vmCvar_t	g_requireClientside;
 vmCvar_t	g_allowRefVote;
+vmCvar_t	g_antiWarp;
+vmCvar_t	g_antiWarpTime;
+vmCvar_t	g_spSkill;
+vmCvar_t	g_pushableItems;
+vmCvar_t	g_refereePassword;
 
 
 // bk001129 - made static to avoid aliasing
@@ -333,6 +338,11 @@ static cvarTable_t gameCvarTable[] = {
 	{ &g_timeoutLimit, "g_timeoutLimit", "2", CVAR_ARCHIVE, 0, qfalse },
 	{ &g_requireClientside, "g_requireClientside", "0", CVAR_ARCHIVE, 0, qtrue },
 	{ &g_allowRefVote, "g_allowRefVote", "-1", CVAR_ARCHIVE, 0, qfalse },
+	{ &g_antiWarp, "g_antiWarp", "1", CVAR_ARCHIVE, 0, qfalse },
+	{ &g_antiWarpTime, "g_antiWarpTime", "1000", CVAR_ARCHIVE, 0, qtrue },
+	{ &g_spSkill, "g_spSkill", "2", CVAR_ARCHIVE, 0, qfalse },
+	{ &g_pushableItems, "g_pushableItems", "0", CVAR_ARCHIVE | CVAR_LATCH, 0, qfalse },
+	{ &g_refereePassword, "g_refereePassword", "", CVAR_ARCHIVE, 0, qfalse },
 };
 
 void G_InitGame					( int levelTime, int randomSeed, int restart );
@@ -924,7 +934,7 @@ void AddTournamentPlayer( void ) {
 			continue;
 		}
 
-		if ( !nextInLine || client->sess.spectatorTime < nextInLine->sess.spectatorTime ) {
+		if ( !nextInLine || client->sess.spectatorNum > nextInLine->sess.spectatorNum ) {
 			nextInLine = client;
 		}
 	}
@@ -937,6 +947,33 @@ void AddTournamentPlayer( void ) {
 
 	// set them to free-for-all team
 	SetTeam( &g_entities[ nextInLine - level.clients ], TEAM_FREE );
+}
+
+/*
+=======================
+AddTournamentQueue
+
+Add client to end of tournament queue
+=======================
+*/
+
+void AddTournamentQueue(gclient_t *client)
+{
+	int index;
+	gclient_t *curclient;
+
+	for(index = 0; index < level.maxclients; index++)
+	{
+		curclient = &level.clients[index];
+
+		if(curclient->pers.connected != CON_DISCONNECTED)
+		{
+			if(curclient == client)
+				curclient->sess.spectatorNum = 0;
+			else if(curclient->sess.sessionTeam == TEAM_SPECTATOR)
+				curclient->sess.spectatorNum++;
+		}
+	}
 }
 
 /*
@@ -1185,10 +1222,10 @@ int QDECL SortRanks( const int *a, const int *b ) {
 		if (ta && !tb)	return 1;
 		if (!ta && tb)	return -1;
 
-		if ( ca->sess.spectatorTime < cb->sess.spectatorTime ) {
+		if ( ca->sess.spectatorNum > cb->sess.spectatorNum ) {
 			return -1;
 		}
-		if ( ca->sess.spectatorTime > cb->sess.spectatorTime ) {
+		if ( ca->sess.spectatorNum < cb->sess.spectatorNum ) {
 			return 1;
 		}
 		return 0;
@@ -3307,7 +3344,7 @@ end = trap_Milliseconds();
 	CheckCvars();
 
 	// garbage collection
-	G_FreeUnusedEntities();
+	// G_FreeUnusedEntities();
 
 	if (g_listEntity.integer) {
 		for (i = 0; i < MAX_GENTITIES; i++) {

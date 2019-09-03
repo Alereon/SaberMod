@@ -1,6 +1,6 @@
 # This file is part of SaberMod - Star Wars Jedi Knight II: Jedi Outcast mod.
 
-# Copyright (C) 2015-2018 Witold Pilat <witold.pilat@gmail.com>
+# Copyright (C) 2015-2019 Witold Pilat <witold.pilat@gmail.com>
 
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -99,8 +99,8 @@ cls_doc		:= README.rst LICENSE.txt
 cls_assets := SOURCE.txt mv.info ui/jk2mpingame.txt						\
 ui/jk2mp/menudef.h ui/jk2mp/ingame_about.menu							\
 ui/jk2mp/ingame_join.menu ui/jk2mp/ingame_callvote.menu					\
-ui/jk2mp/createserver.menu ui/jk2mp/ingame_player.menu					\
-ui/jk2mp/ingame_setup_modoptions.menu									\
+ui/jk2mp/ingame_controls.menu ui/jk2mp/createserver.menu				\
+ui/jk2mp/ingame_player.menu ui/jk2mp/ingame_setup_modoptions.menu		\
 ui/jk2mp/ingame_setup_modoptions2.menu ui/jk2mp/gameinfo.txt			\
 ui/jk2mp/setup.menu ui/jk2mp/ingame.menu								\
 ui/jk2mp/ingame_setup_original.menu ui/jk2mp/rules_games.menu			\
@@ -109,10 +109,11 @@ shaders/sabermod.shader_mv shaders/sabermod.shader						\
 gfx/2d/crosshairj.tga gfx/2d/crosshairarrow.tga							\
 gfx/menus/download.tga gfx/menus/missing.tga							\
 gfx/menus/menu_buttonback_new.jpg gfx/menus/menu_buttonback2_new.jpg	\
-scripts/arenas.txt
+scripts/arenas.txt scripts/duel.arena
 
 svs_zip		:= $(name)-$(VERSION).zip
-svs_assets	:= server.cfg reset.cfg modes/ scripts/
+svs_assets := server.cfg reset.cfg modes/ scripts/arenas.txt	\
+scripts/duel.arena
 svs_doc := README.rst LICENSE.txt CHANGELOG.rst cvar-calculator.html	\
 assets/SOURCE.txt
 

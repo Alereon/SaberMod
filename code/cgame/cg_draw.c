@@ -4,7 +4,7 @@ This file is part of SaberMod - Star Wars Jedi Knight II: Jedi Outcast mod.
 
 Copyright (C) 1999-2000 Id Software, Inc.
 Copyright (C) 1999-2002 Activision
-Copyright (C) 2015-2018 Witold Pilat <witold.pilat@gmail.com>
+Copyright (C) 2015-2019 Witold Pilat <witold.pilat@gmail.com>
 
 This program is free software; you can redistribute it and/or modify it
 under the terms and conditions of the GNU General Public License,
@@ -2515,10 +2515,11 @@ static void CG_DrawLagometer( void ) {
 	// draw the graph
 	//
 	x = cgs.screenWidth - 48;
-	y = 480 - 144;
+	y = SCREEN_HEIGHT - 144;
 
 	trap_R_SetColor( NULL );
 	CG_DrawPic( x, y, 48, 48, cgs.media.lagometerShader );
+	x -= 1.0f; //lines the actual graph up with the background
 
 	ax = x;
 	ay = y;
@@ -2742,9 +2743,13 @@ CG_PrintMotd_f
 ==================
 */
 void CG_PrintMotd_f( void ) {
-	cg.centerPrintLock = qfalse;
-	CG_CenterPrint( CG_ConfigString( CS_INGAME_MOTD ), SCREEN_HEIGHT * 0.30f );
-	cg.centerPrintLock = qtrue;
+	const char *motd = CG_ConfigString( CS_INGAME_MOTD );
+
+	if (strcmp(motd, "")) {
+		cg.centerPrintLock = qfalse;
+		CG_CenterPrint( motd, SCREEN_HEIGHT * 0.30f );
+		cg.centerPrintLock = qtrue;
+	}
 }
 
 /*
@@ -2813,8 +2818,8 @@ static void CG_DrawCrosshairIndicators(float x, float y, float w, float h) {
 		static vec4_t color = { 1, 1, 1, 1 };
 		const font_t font = FONT_SMALL;
 		const float scale = 0.5f;
-
-		float velocity = VectorLength(cg.snap->ps.velocity);
+		vec_t *vec = cg.snap->ps.velocity;
+		float velocity = sqrtf(vec[0] * vec[0] + vec[1] * vec[1]);
 		const char *s = va("%d", (int)velocity);
 		float textX = x - 0.5f * CG_Text_Width(s, scale, font);
 		float textY = y + h + 5;
@@ -2848,6 +2853,11 @@ static void CG_DrawCrosshair( vec3_t worldPoint, int chEntValid ) {
 
 	if ( cg.predictedPlayerState.zoomMode != ZOOM_NONE )
 	{//not while scoped
+		return;
+	}
+
+	if (cg.spec.following && cg.spec.mode == SPECMODE_FREEANGLES)
+	{
 		return;
 	}
 
@@ -2969,8 +2979,8 @@ static void CG_DrawCrosshair( vec3_t worldPoint, int chEntValid ) {
 	}
 	else
 	{
-		x = 0.5f * (cgs.screenWidth - w) + cg_crosshairX.value;
-		y = 0.5f * (SCREEN_HEIGHT - h) + cg_crosshairY.value;
+		x = 0.5f * cgs.screenWidth + cg_crosshairX.value;
+		y = 0.5f * SCREEN_HEIGHT + cg_crosshairY.value;
 	}
 
 	hShader = cgs.media.crosshairShader[ CLAMP( 0, NUM_CROSSHAIRS - 1, cg_drawCrosshair.integer ) ];
@@ -2978,7 +2988,7 @@ static void CG_DrawCrosshair( vec3_t worldPoint, int chEntValid ) {
 	x += cg.refdef.x;
 	y += cg.refdef.y;
 
-	CG_DrawPic( x - 0.5f * w, y - 0.5f * w, w, h, hShader );
+	CG_DrawPic( x - 0.5f * w, y - 0.5f * h, w, h, hShader );
 	CG_DrawCrosshairIndicators( x, y, w, h );
 }
 
@@ -3831,6 +3841,11 @@ static qboolean CG_DrawFollow( void )
 	const char	*s;
 	float		x;
 
+	if ( !cg_drawFollow.integer )
+	{
+		return qfalse;
+	}
+
 	if ( !(cg.snap->ps.pm_flags & PMF_FOLLOW) )
 	{
 		return qfalse;
@@ -3845,24 +3860,25 @@ static qboolean CG_DrawFollow( void )
 	x = 0.5f * (cgs.screenWidth - CG_Text_Width(s, 2.0f, FONT_MEDIUM));
 	CG_Text_Paint (x, 80, 2.0f, colorWhite, s, 0, 0, 0, FONT_MEDIUM);
 
-	if ( !cg_drawSpectatorHints.integer ) {
-		return qtrue;
+	return qtrue;
+}
+
+static void CG_DrawScoreboardHints( void )
+{
+	const char	*s;
+	float		x;
+
+	if ( !(cg.snap->ps.pm_flags & PMF_FOLLOW) ) {
+		return;
 	}
 
-	if ( !cg.showScores ) {
-		return qtrue;
+	if ( !cg_drawSpectatorHints.integer ) {
+		return;
 	}
 
 	if ( cg.demoPlayback ) {
-		return qtrue;
+		return;
 	}
-
-	// don't draw over item/force/weapon select bar
-	/*
-	if ( cg.iconHUDActive ) {
-		return qtrue;
-	}
-	*/
 
 	x = 0.5f * cgs.screenWidth;
 
@@ -3898,8 +3914,6 @@ static qboolean CG_DrawFollow( void )
 		s = CG_GetStripEdString("SABERINGAME", "FFA_FOLLOW_HINT");
 		UI_DrawProportionalString(x, 440, s, UI_CENTER, colorWhite);
 	}
-
-	return qtrue;
 }
 
 #ifdef UNUSED
@@ -4816,12 +4830,14 @@ static void CG_Draw2D( void ) {
 		CG_DrawUpperRight();
 	}
 
-	CG_DrawFollow();
 	CG_DrawWarmup();
 
 	// don't draw center string if scoreboard is up
 	cg.scoreBoardShowing = CG_DrawScoreboard();
-	if ( !cg.scoreBoardShowing) {
+	if ( cg.scoreBoardShowing) {
+		CG_DrawScoreboardHints();
+	} else {
+		CG_DrawFollow();
 		CG_DrawCenterString();
 		CG_DrawCountdown();
 	}

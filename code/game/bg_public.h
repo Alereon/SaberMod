@@ -4,7 +4,7 @@ This file is part of SaberMod - Star Wars Jedi Knight II: Jedi Outcast mod.
 
 Copyright (C) 1999-2000 Id Software, Inc.
 Copyright (C) 1999-2002 Activision
-Copyright (C) 2015-2018 Witold Pilat <witold.pilat@gmail.com>
+Copyright (C) 2015-2019 Witold Pilat <witold.pilat@gmail.com>
 
 This program is free software; you can redistribute it and/or modify it
 under the terms and conditions of the GNU General Public License,
@@ -312,6 +312,9 @@ extern	pmove_t		*pm;
 
 // if a full pmove isn't done on the client, you can just update the angles
 void PM_UpdateViewAngles( playerState_t *ps, const usercmd_t *cmd );
+void PM_UpdateViewAngles2( vec3_t viewangles, int *delta_angles, const usercmd_t *cmd );
+void PM_SetDeltaAngles(int *delta_angles, const vec3_t angle, const usercmd_t *ucmd);
+
 void Pmove (pmove_t *pmove);
 
 //===================================================================================
@@ -911,7 +914,7 @@ saberMoveName_t BG_KnockawayForParry( saberBlockedType_t move );
 qboolean BG_InRoll( const playerState_t *ps, animNumber_t anim );
 qboolean BG_InDeathAnim( animNumber_t anim );
 
-void BG_SaberStartTransAnim( forceLevel_t saberAnimLevel, animNumber_t anim, float *animSpeed );
+void BG_SaberStartTransAnim( animNumber_t anim, float *animSpeed );
 
 void BG_ForcePowerDrain( playerState_t *ps, forcePowers_t forcePower, int overrideAmt );
 

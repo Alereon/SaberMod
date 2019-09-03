@@ -31,6 +31,12 @@ follow [first|second]
 motd
   Show server Message of the Day.
 
+nextspecmode/prevspecmode
+  Cycle through spectator modes when following another
+  player. Currently available modes are:
+  1. Follow another player from his POV. (default)
+  2. You can freely control camera angles and range.
+
 players [?|team]
   List players connected to server with some additional
   info. Optionally limit to members of `team`.
@@ -44,6 +50,9 @@ timeout
 ragequit
   Reserved for God, do not use.
 
+ready
+  Toggle ready status during warmup.
+
 seek [+|-][mm:]ss
   During demo playback seeks to `mm:ss` server time. With `+` or `-`
   prefix seeks `mm` minutes and `ss` seconds forwards or backwards.
@@ -51,7 +60,7 @@ seek [+|-][mm:]ss
 Callvote
 ........
 
-match <0|1>
+matchmode <0|1>
   Enable/Disable match mode - restrict spectator chat, disable damage
   plums and require matching clientside. In round-based gametypes dead
   players may only follow their teammates.
@@ -82,7 +91,11 @@ teamsize <size>
 Referee Commands
 ................
 
-These commands can be used only by a registered referee.
+These commands can be used only by a registered referee or server
+console (rcon).
+
+allready
+  Make all players ready in warmup or during intermission.
 
 announce <message|motd>
   Print `message` or ingame message of the day on everyone's screen.
@@ -111,14 +124,6 @@ CGame Cvars
 handicap <x>
   Lower your max health to x and damage to x%.
 
-cg_camerafps <fps>
-  Enable FPS-independent third person camera that behaves exactly like
-  original camera running at <fps> frames per second and in perfect
-  conditions. Setting this to your `com_maxfps` value seamlessly fixes
-  camera warping in many scenarios: unstable fps, unstable connection,
-  overloaded server, local server, high velocity movement, demo
-  playback. 0 restores original behaviour.
-
 cg_chatBeep <0|1>
   Turn on/off chat beep.
 
@@ -143,12 +148,15 @@ cg_damagePlums <0|1>
 cg_darkenDeadBodies <0|1>
   Darken dead bodies outside of duel too.
 
+cg_drawClock <0|1>
+  Draw clock showing your local time.
+
+cg_drawFollow <0|1>
+  Draw large "Following <playername>" message.
+
 cg_drawRewards <0|1>
   Draw rewards for outstanding moves. Requires ent's "Jedi Knight
   Rewards 2" assets.
-
-cg_drawClock <0|1>
-  Draw clock showing your local time.
 
 cg_drawTimer <0|1|2>
   Draw game timer. 1 - count up, 2 - count down.
@@ -159,11 +167,20 @@ cg_duelGlow <0|1>
 cg_fastSeek <0|1>
   Use experimental fast seeking method (see `seek` console command).
 
+cg_fixServerTime <0|1>
+  Fix various engine issues on servers running for a few days.
+
 cg_followKiller <0|1>
   When player you are following dies, switch to his killer.
 
 cg_followPowerup <0|1>
   Automatically follow flag and powerup carriers.
+
+cg_fovAspectAdjust <0|1>
+  Change Field Of View calculations so that they don't disadvantage
+  widescreen monitors. Instead of cropping top and bottom parts of the
+  screen it's extended to the sides, compared to 4:3 display. Works
+  only when `cg_widescreen` is enabled.
 
 cg_drawSpectatorHints <0|1>
   Draw extra hints on new spectator features.
@@ -172,17 +189,23 @@ cg_privateDuel <0|1>
   Hide all other players and entities when duelling. Available only
   on server running JK2MV 1.2 or newer.
 
-cg_fixServerTime <0|1>
-  Fix various engine issues on servers running for a few days.
+cg_smoothCamera <0|1>
+  Fix camera warping while maintaining original feel in following
+  scenarios: unstable fps, unstable connection, overloaded server,
+  local server, high velocity movement, demo playback.
+
+cg_smoothCameraFPS <fps>
+  Emulate specific fps with `cg_smoothCamera`. When this is 0, current
+  com_maxfps is used instead. Useful for demo rendering.
 
 cg_widescreen <0|1>
   Enable HUD adjustments for widescreen monitors
 
-cg_widescreenFov <0|1>
-  Change Field Of View calculations so that they don't disadvantage
-  widescreen monitors. Instead of cropping top and bottom parts of the
-  screen it's extended to the sides, compared to 4:3 display. Works
-  only when cg_widescreen is enabled.
+UI Cvars
+........
+
+ui_widescreen <0|1>
+  Enable menu adjustments for widescreen monitors
 
 Spectating
 ..........
@@ -214,12 +237,15 @@ mode <mode|default>
 players [team]
   Print various informations about players. Optionally filter by team.
 
-spawnitems [items]
-  Enable/Disable spawning items using human readable names. Type
-  without argument to see usage instructions.
+referee <password>
+  Become a referee using password provided by server admin.
 
 remove <player|all> [time]
   Remove `player` to spectator team for at least `time` seconds.
+
+spawnitems [items]
+  Enable/Disable spawning items using human readable names. Type
+  without argument to see usage instructions.
 
 shuffle
   Randomize teams.
@@ -267,6 +293,21 @@ g_allowVote <0|1|bitmask>
   65536 - Capturelimit   131072 - Poll          262144 - Referee
   =====================  =====================  =====================
 
+g_antiWarp <0|1|2>
+  Prevention system against players who are warping or using lag scripts.
+  | 1: Draw icon above warping player's head.
+  | 2: Forcefully prevent players from warping for others. This
+       setting makes game almost unplayable for a warping player and
+       may hurt legitimate players who have bad connection.
+  Refer to `g_antiWarpTime` cvar description for more details.
+
+g_antiWarpTime <msec>
+  Tune when player is considered as warping and g_antiWarp preventive
+  actions are taken against him. Default setting is 1000 and it only
+  marks players with interrupted connection. To prevent warping and
+  lag scripts it should be set as low as possible so that legitimate
+  players are not affected.
+
 g_damagePlums <0|1>
   Allow clients with `cg_damagePlums` enabled to see damage plums.
 
@@ -277,11 +318,19 @@ g_infiniteAmmo <0|1>
   Players spawn with infinite ammo for all weapons.
 
 g_ingameMotd <message|none>
-  Ingame message of the day shown to all players. May contain \n for
-  newline and \\ for backslash.
+  Ingame message of the day shown to all players. May contain `\n` for
+  newline and `\\` for backslash.
 
 g_instagib <0|1>
   Enable simple instagib mode for all weapons. Splash does no damage.
+
+g_kickMethod <method>
+  Choose one of following force kick methods:
+
+  =====================  =====================  =====================
+  0 - No effect          1 - Basejk             2 - No damage
+  3 - League Mod
+  =====================  =====================  =====================
 
 g_log[1-4] <filename>
   You can use 4 separate log files now.
@@ -319,13 +368,18 @@ g_modeDefaultMap <map>
 g_modeIdleTime <minutes>
   Reset to default mode if server has been idle for this many minutes.
 
-g_kickMethod <method>
-  Choose one of following force kick methods:
+g_pushableItems <mask>
+  What types of items should be movable with force push and pull:
 
   =====================  =====================  =====================
-  0 - No effect          1 - Basejk             2 - No damage
-  3 - League Mod
+  2 - Weapon             4 - Ammo               8 - Armor
+  16 - Health            32 - Powerup           64 - Holdable
   =====================  =====================  =====================
+
+g_refereePassword <password>
+  Allow players who know password to become referees using `referee`
+  `Console Commands`_. When this cvar is empty (default), `referee`
+  console command cannot be used to become a referee.
 
 g_requireClientside <0|1>
   Allow only players with matching clientside to join the game.
@@ -341,16 +395,6 @@ g_roundWarmup <seconds>
   How many seconds players get to reposition themselves at the start
   of a round.
 
-g_spawnShield <ammount>
-  Ammount of shield player gets on spawn.
-
-g_teamForceBalance <number>
-  Prevents players from joining the weaker team if difference
-  is greater than `number`.
-
-g_teamsizeMin <size>
-  Minimum votable teamsize.
-
 g_spawnItems <bitmask>
   What items will be given to players on spawn. Use following bitmask:
 
@@ -359,11 +403,21 @@ g_spawnItems <bitmask>
   32 - Binoculars        64 - Sentry
   =====================  =====================  =====================
 
+g_spawnShield <ammount>
+  Ammount of shield player gets on spawn.
+
 g_spawnWeapons <bitmask>
   Controls weapons given to players on spawn using the same bitmask
   as `g_weaponDisable`. The later cvar affects only weapons and ammo
   spawned on a map. Setting this cvar to 0 restores original behaviour
   of `g_weaponDisable`.
+
+g_teamForceBalance <number>
+  Prevents players from joining the weaker team if difference
+  is greater than `number`.
+
+g_teamsizeMin <size>
+  Minimum votable teamsize.
 
 g_timeoutLimit <number>
   Maximum number of times a player is allowed to call a timeout.
@@ -378,6 +432,11 @@ g_unlaggedMaxPing <msec>
   behind an obstacle. This cvar's value limits time period in which
   this can happen, adding extra hit detection delay for players with
   pings higher than `msec`.
+
+g_warmup <0|1>
+  SaberMod has a new warmup system. All players must ready up with
+  `ready` command before a match can start. Old `g_warmupTime` Cvar is
+  no longer used. Setting this cvar to 0 disables warmup alltogether.
 
 g_voteCooldown <seconds>
   How long a player has to wait before he can call another vote.
@@ -488,9 +547,9 @@ Authors
 
 * id Software 1999-2000
 * Raven Software 1999-2002
-* SaberMod developers 2015-2018
+* SaberMod developers 2015-2019
 
-  + Witold *fau* Piłat <witold.pilat@gmail.com> 2015-2018
+  + Witold *fau* Piłat <witold.pilat@gmail.com> 2015-2019
   + Dziablo 2015-2016
 
 Thanks
@@ -503,6 +562,8 @@ Thanks
 * Xycaleth - Creating League mod that was a great inspiration to
   SaberMod and sharing its source code.
 * ouned - Engine and modding expertise.
+* Bucky, God, Kameleon, michl, PowTech, Tr!force - Providing valuable
+  programming input, review, ideas and patches.
 * Developers of jk2mv, mvsdk, Jedi Academy, OpenJK, ioq3, jomme, JA++
   (japp), League Mod and other open source id tech 3 mods for various
   code bugfixes.

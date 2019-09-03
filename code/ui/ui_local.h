@@ -4,7 +4,7 @@ This file is part of SaberMod - Star Wars Jedi Knight II: Jedi Outcast mod.
 
 Copyright (C) 1999-2000 Id Software, Inc.
 Copyright (C) 1999-2002 Activision
-Copyright (C) 2015-2018 Witold Pilat <witold.pilat@gmail.com>
+Copyright (C) 2015-2019 Witold Pilat <witold.pilat@gmail.com>
 
 This program is free software; you can redistribute it and/or modify it
 under the terms and conditions of the GNU General Public License,
@@ -323,6 +323,7 @@ void UI_ShowPostGame(qboolean newHigh);
 void UI_ClearScores();
 void UI_LoadArenas(void);
 void UI_LoadForceConfig_List( void );
+void UI_WidescreenMode(qboolean on);
 
 //
 // ui_menu.c
@@ -543,8 +544,8 @@ typedef struct {
 typedef struct {
 	int					frametime;
 	int					realtime;
-	int					cursorx;
-	int					cursory;
+	float				cursorx;
+	float				cursory;
 	glconfig_t 	glconfig;
 	qboolean		debug;
 	qhandle_t		whiteShader;
@@ -569,7 +570,7 @@ typedef struct {
 #define MAX_HEADNAME  32
 #define MAX_TEAMS 64
 #define MAX_GAMETYPES 16
-#define MAX_MAPS 128
+#define MAX_MAPS 512
 #define MAX_SPMAPS 16
 #define PLAYERS_PER_TEAM 8//5
 #define MAX_PINGREQUESTS		32
@@ -595,7 +596,7 @@ typedef struct {
 #define MAX_MODS 64
 #define MAX_DEMOS 256
 #define MAX_MOVIES 256
-#define MAX_PLAYERMODELS 256
+#define MAX_PLAYERMODELS 1024
 
 #define MAX_SCROLLTEXT_SIZE		4096
 #define MAX_SCROLLTEXT_LINES		64
@@ -838,7 +839,14 @@ typedef struct {
 
 	qboolean inGameLoad;
 
-	qboolean httpDownloads;
+	qboolean		httpDownloads;
+	int				mvapi;
+	float			screenWidth;
+	float			screenXFactor;
+	float			screenXFactorInv;
+	float			screenHeight;
+	float			screenYFactor;
+	float			screenYFactorInv;
 }	uiInfo_t;
 
 extern uiInfo_t uiInfo;
@@ -1018,6 +1026,11 @@ qboolean trap_G2API_SetBoneAngles(void *ghoul2, int modelIndex, const char *bone
 /*
 Ghoul2 Insert End
 */
+
+// MVAPI
+
+void trap_MVAPI_SetVirtualScreen(float w, float h);
+
 //
 // ui_addbots.c
 //

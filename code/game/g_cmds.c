@@ -4,7 +4,7 @@ This file is part of SaberMod - Star Wars Jedi Knight II: Jedi Outcast mod.
 
 Copyright (C) 1999-2000 Id Software, Inc.
 Copyright (C) 1999-2002 Activision
-Copyright (C) 2015-2018 Witold Pilat <witold.pilat@gmail.com>
+Copyright (C) 2015-2019 Witold Pilat <witold.pilat@gmail.com>
 
 This program is free software; you can redistribute it and/or modify it
 under the terms and conditions of the GNU General Public License,
@@ -478,29 +478,29 @@ void Cmd_Give_f (gentity_t *ent)
 	}
 	if (Q_stricmp(name, "denied") == 0) {
 		ent->client->pers.persistant[PERS_PLAYEREVENTS] ^= PLAYEREVENT_DENIEDREWARD;
-		ent->s.eFlags &= ~EF_AWARDS;
-		ent->s.eFlags |= EF_AWARD_DENIED;
+		ent->client->ps.eFlags &= ~EF_AWARDS;
+		ent->client->ps.eFlags |= EF_AWARD_DENIED;
 		ent->client->rewardTime = level.time + REWARD_SPRITE_TIME;
 		return;
 	}
 	if (Q_stricmp(name, "capture") == 0) {
 		ent->client->pers.persistant[PERS_CAPTURES]++;
-		ent->s.eFlags &= ~EF_AWARDS;
-		ent->s.eFlags |= EF_AWARD_CAP;
+		ent->client->ps.eFlags &= ~EF_AWARDS;
+		ent->client->ps.eFlags |= EF_AWARD_CAP;
 		ent->client->rewardTime = level.time + REWARD_SPRITE_TIME;
 		return;
 	}
 	if (Q_stricmp(name, "defend") == 0) {
 		ent->client->pers.persistant[PERS_DEFEND_COUNT]++;
-		ent->s.eFlags &= ~EF_AWARDS;
-		ent->s.eFlags |= EF_AWARD_DEFEND;
+		ent->client->ps.eFlags &= ~EF_AWARDS;
+		ent->client->ps.eFlags |= EF_AWARD_DEFEND;
 		ent->client->rewardTime = level.time + REWARD_SPRITE_TIME;
 		return;
 	}
 	if (Q_stricmp(name, "assist") == 0) {
 		ent->client->pers.persistant[PERS_ASSIST_COUNT]++;
-		ent->s.eFlags &= ~EF_AWARDS;
-		ent->s.eFlags |= EF_AWARD_ASSIST;
+		ent->client->ps.eFlags &= ~EF_AWARDS;
+		ent->client->ps.eFlags |= EF_AWARD_ASSIST;
 		ent->client->rewardTime = level.time + REWARD_SPRITE_TIME;
 		return;
 	}
@@ -786,7 +786,7 @@ qboolean SetTeamSpec( gentity_t *ent, team_t team, spectatorState_t specState, i
 
 	if ( team == TEAM_SPECTATOR ) {
 		// they go to the end of the line for tournaments
-		client->sess.spectatorTime = level.time;
+		AddTournamentQueue(client);
 
 		if ( client->ps.duelInProgress ) {
 			client->sess.losses++;
@@ -915,6 +915,7 @@ void StopFollowing( gentity_t *ent ) {
 	// bots can follow too
 	// ent->r.svFlags &= ~SVF_BOT;
 	client->sess.spectatorState = SPECTATOR_FREE;
+	client->ps.commandTime = client->pers.cmd.serverTime;
 	memcpy( client->ps.persistant, client->pers.persistant, sizeof( client->ps.persistant ) );
 	client->ps.pm_type = PM_SPECTATOR;
 	client->ps.pm_flags &= ~PMF_FOLLOW;
@@ -1766,7 +1767,6 @@ void Cmd_CallVote_f( gentity_t *ent ) {
 	const char		*arg2;
 	const char		*errorMsg;
 	const char		*mapInfo;
-	arena_t			arena;
 	char			s[MAX_STRING_CHARS];
 	int				voteMask;
 
@@ -1922,6 +1922,10 @@ void Cmd_CallVote_f( gentity_t *ent ) {
 			voteName, gametypeLong[i] );
 		break;
 	case CV_MAP:
+	{
+		const char	*mapName;
+		arena_t		arena;
+
 		// special case for map changes, we want to reset the nextmap setting
 		// this allows a player to change maps, but not upset the map rotation
 		arena = G_GetArenaByMap( arg2 );
@@ -1933,18 +1937,21 @@ void Cmd_CallVote_f( gentity_t *ent ) {
 			return;
 		}
 
+		mapInfo = G_GetArenaInfo( arena );
+		mapName = Info_ValueForKey( mapInfo, "map" );
+
 		trap_Cvar_VariableStringBuffer( "nextmap", s, sizeof(s) );
 		if (*s) {
-			Com_sprintf( level.voteString, sizeof( level.voteString ), "map %s; set nextmap \"%s\"", arg2, s );
+			Com_sprintf( level.voteString, sizeof( level.voteString ), "map %s; set nextmap \"%s\"", mapName, s );
 		} else {
-			Com_sprintf( level.voteString, sizeof( level.voteString ), "map %s", arg2 );
+			Com_sprintf( level.voteString, sizeof( level.voteString ), "map %s", mapName );
 		}
 
-		mapInfo = G_GetArenaInfo( arena );
 		Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ),
 			"%s %s" S_COLOR_WHITE " (%s" S_COLOR_WHITE ")", voteName,
-			Info_ValueForKey( mapInfo, "longname" ), Info_ValueForKey( mapInfo, "map" ) );
+			Info_ValueForKey( mapInfo, "longname" ), mapName );
 		break;
+	}
 	case CV_KICK:
 		i = G_ClientNumberFromString( arg2, &errorMsg );
 
@@ -1992,7 +1999,7 @@ void Cmd_CallVote_f( gentity_t *ent ) {
 				va("print \"teamsize must be greater than %d.\n\"",	g_teamsizeMin.integer - 1 ) );
 			return;
 		}
-		Com_sprintf( level.voteString, sizeof( level.voteString ), "%s \"%s\"", arg1, arg2 );
+		Com_sprintf( level.voteString, sizeof( level.voteString ), "teamsize \"%d\"", i );
 		Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ), "%s %d", voteName, i );
 		break;
 	case CV_REMOVE:
@@ -2003,7 +2010,7 @@ void Cmd_CallVote_f( gentity_t *ent ) {
 			return;
 		}
 
-		Com_sprintf( level.voteString, sizeof( level.voteString ), "%s %d", arg1, i );
+		Com_sprintf( level.voteString, sizeof( level.voteString ), "remove %d", i );
 		Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ), "%s %s",
 			voteName, g_entities[i].client->info.netname );
 		break;
@@ -2066,7 +2073,7 @@ void Cmd_CallVote_f( gentity_t *ent ) {
 		break;
 	case CV_SHUFFLE:
 		// no argument votes
-		Com_sprintf( level.voteString, sizeof( level.voteString ), "%s", arg1 );
+		Com_sprintf( level.voteString, sizeof( level.voteString ), "shuffle" );
 		Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ), "%s", voteName );
 		break;
 	default:
@@ -2623,7 +2630,7 @@ void Cmd_EngageDuel_f(gentity_t *ent)
 	{
 		unsigned dimension;
 
-		char *s = va("print \"%s" S_COLOR_WHITE " %s %s!\n\"", challenged->client->info.netname,
+		char *s = va("print \"%s" S_COLOR_WHITE " %s %s" S_COLOR_WHITE "!\n\"", challenged->client->info.netname,
 			G_GetStripEdString("SVINGAME", "PLDUELACCEPT"), ent->client->info.netname);
 		trap_SendServerCommand(-1, s);
 
@@ -2721,10 +2728,32 @@ static void Cmd_RageQuit_f(gentity_t *ent)
 
 static void Cmd_Ready_f(gentity_t *ent)
 {
-	if (level.warmupTime) {
-		ent->client->pers.ready = (qboolean)!ent->client->pers.ready;
-		G_UpdateClientReadyFlags();
+	gclient_t	*client = ent->client;
+
+	if (!level.warmupTime) {
+		return;
 	}
+
+	if (client->readyTime + 1000 > level.time) {
+		G_SendServerCommand(ent-g_entities,
+			"print \"May not use this command more than once per second.\n\"");
+		return;
+	}
+
+	if (client->pers.ready) {
+		client->pers.ready = qfalse;
+		G_SendServerCommand(-1, "cp \"%s" S_COLOR_WHITE " is "
+			S_COLOR_RED "not ready" S_COLOR_WHITE ".\n\"",
+			client->info.netname);
+	} else {
+		client->pers.ready = qtrue;
+		G_SendServerCommand(-1, "cp \"%s" S_COLOR_WHITE " is "
+			S_COLOR_GREEN "ready" S_COLOR_WHITE ".\n\"",
+			client->info.netname);
+	}
+
+	client->readyTime = level.time;
+	G_UpdateClientReadyFlags();
 }
 
 static void Cmd_Timeout_f(gentity_t *ent)
@@ -2748,6 +2777,22 @@ static void Cmd_Timein_f(gentity_t *ent)
 		level.unpauseTime = level.time + 5000;
 		trap_SendServerCommand(-1, va("print \"%s" S_COLOR_WHITE " called a timein.\n\"", ent->client->info.netname));
 	}
+}
+
+static void Cmd_Referee_f(gentity_t *ent)
+{
+	if (trap_Argc() < 2) {
+		trap_SendServerCommand(ent-g_entities, "print \"Usage: referee <password>\n\"");
+		return;
+	}
+
+	if (!strcmp(g_refereePassword.string, "") ||
+		strcmp(g_refereePassword.string, ConcatArgs(1))) {
+		trap_SendServerCommand(ent-g_entities, "print \"Incorrect password.\n\"");
+		return;
+	}
+
+	trap_SendConsoleCommand(EXEC_APPEND, va("referee %d\n", ent->s.number));
 }
 
 #ifdef _DEBUG
@@ -3035,6 +3080,7 @@ static const clientCommand_t commands[] = {
 	{ "gc", Cmd_GameCommand_f, CMD_NOINTERMISSION },
 	{ "timeout", Cmd_Timeout_f, CMD_ALIVE | CMD_NOINTERMISSION },
 	{ "timein", Cmd_Timein_f, CMD_ALIVE | CMD_NOINTERMISSION },
+	{ "referee", Cmd_Referee_f, 0 },
 	{ "give", Cmd_Give_f, CMD_CHEAT | CMD_ALIVE | CMD_NOINTERMISSION },
 	{ "god", Cmd_God_f, CMD_CHEAT | CMD_ALIVE | CMD_NOINTERMISSION },
 	{ "notarget", Cmd_Notarget_f, CMD_CHEAT | CMD_ALIVE | CMD_NOINTERMISSION },

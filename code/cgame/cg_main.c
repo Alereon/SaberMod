@@ -4,7 +4,7 @@ This file is part of SaberMod - Star Wars Jedi Knight II: Jedi Outcast mod.
 
 Copyright (C) 1999-2000 Id Software, Inc.
 Copyright (C) 1999-2002 Activision
-Copyright (C) 2015-2018 Witold Pilat <witold.pilat@gmail.com>
+Copyright (C) 2015-2019 Witold Pilat <witold.pilat@gmail.com>
 
 This program is free software; you can redistribute it and/or modify it
 under the terms and conditions of the GNU General Public License,
@@ -561,18 +561,18 @@ vmCvar_t 	cg_redTeamName;
 vmCvar_t 	cg_blueTeamName;
 vmCvar_t	cg_currentSelectedPlayer;
 vmCvar_t	cg_currentSelectedPlayerName;
-vmCvar_t	cg_singlePlayer;
 vmCvar_t	cg_enableDust;
 vmCvar_t	cg_enableBreath;
-vmCvar_t	cg_singlePlayerActive;
 vmCvar_t	cg_recordSPDemo;
 vmCvar_t	cg_recordSPDemoName;
 
 vmCvar_t	cg_chatBeep;
-vmCvar_t	cg_camerafps;
+vmCvar_t	cg_smoothCamera;
+vmCvar_t	cg_smoothCameraFPS;
 vmCvar_t	cg_crosshairColor;
 vmCvar_t	cg_darkenDeadBodies;
 vmCvar_t	cg_drawClock;
+vmCvar_t	cg_drawFollow;
 vmCvar_t	cg_drawSpectatorHints;
 vmCvar_t	cg_duelGlow;
 vmCvar_t	cg_fastSeek;
@@ -582,9 +582,10 @@ vmCvar_t	cg_privateDuel;
 vmCvar_t	cg_crosshairIndicators;
 vmCvar_t	cg_crosshairIndicatorsSpec;
 vmCvar_t	cg_widescreen;
-vmCvar_t	cg_widescreenFov;
+vmCvar_t	cg_fovAspectAdjust;
 
 vmCvar_t	cg_ui_myteam;
+vmCvar_t	cg_com_maxfps;
 
 vmCvar_t	cg_param1;
 vmCvar_t	cg_param2;
@@ -710,10 +711,8 @@ static cvarTable_t cvarTable[] = { // bk001129
 
 	{ &cg_redTeamName, "g_redteam", DEFAULT_REDTEAM_NAME, CVAR_ARCHIVE | CVAR_SERVERINFO | CVAR_USERINFO },
 	{ &cg_blueTeamName, "g_blueteam", DEFAULT_BLUETEAM_NAME, CVAR_ARCHIVE | CVAR_SERVERINFO | CVAR_USERINFO },
-	{ &cg_singlePlayer, "ui_singlePlayerActive", "0", CVAR_USERINFO},
 //	{ &cg_enableDust, "g_enableDust", "0", 0},
 //	{ &cg_enableBreath, "g_enableBreath", "0", 0},
-	{ &cg_singlePlayerActive, "ui_singlePlayerActive", "0", CVAR_USERINFO},
 	{ &cg_recordSPDemo, "ui_recordSPDemo", "0", CVAR_ARCHIVE},
 	{ &cg_recordSPDemoName, "ui_recordSPDemoName", "", CVAR_ARCHIVE},
 
@@ -723,8 +722,8 @@ static cvarTable_t cvarTable[] = { // bk001129
 	{ &cg_timescaleFadeSpeed, "cg_timescaleFadeSpeed", "0", 0},
 	{ &cg_timescale, "timescale", "1", 0},
 	{ &cg_damagePlums, "cg_damagePlums", "1", CVAR_ARCHIVE},
-	{ &cg_hudFiles, "cg_hudFiles", "0", CVAR_USERINFO | CVAR_ARCHIVE},
-	{ &cg_smoothClients, "cg_smoothClients", "0", CVAR_USERINFO | CVAR_ARCHIVE},
+	{ &cg_hudFiles, "cg_hudFiles", "0", CVAR_ARCHIVE},
+	{ &cg_smoothClients, "cg_smoothClients", "0", CVAR_ARCHIVE},
 //	{ &cg_cameraMode, "com_cameraMode", "0", CVAR_CHEAT},
 
 	{ &cg_pmove_fixed, "pmove_fixed", "0", 0},
@@ -736,22 +735,25 @@ static cvarTable_t cvarTable[] = { // bk001129
 //	{ &cg_trueLightning, "cg_trueLightning", "0.0", CVAR_ARCHIVE},
 
 	{ &cg_chatBeep, "cg_chatBeep", "1", CVAR_ARCHIVE},
-	{ &cg_camerafps, "cg_camerafps", "0", CVAR_ARCHIVE},
+	{ &cg_smoothCamera, "cg_smoothCamera", "1", CVAR_ARCHIVE},
+	{ &cg_smoothCameraFPS, "cg_smoothCameraFPS", "0", CVAR_ARCHIVE},
 	{ &cg_crosshairColor, "cg_crosshairColor", "0", CVAR_ARCHIVE},
 	{ &cg_darkenDeadBodies, "cg_darkenDeadBodies", "0", CVAR_ARCHIVE},
 	{ &cg_drawClock, "cg_drawClock", "0", CVAR_ARCHIVE },
+	{ &cg_drawFollow, "cg_drawFollow", "1", CVAR_ARCHIVE },
 	{ &cg_drawSpectatorHints, "cg_drawSpectatorHints", "1", CVAR_ARCHIVE },
 	{ &cg_duelGlow, "cg_duelGlow", "1", CVAR_ARCHIVE},
-	{ &cg_fastSeek, "cg_fastSeek", "0", CVAR_ARCHIVE},
+	{ &cg_fastSeek, "cg_fastSeek", "1", CVAR_ARCHIVE},
 	{ &cg_followKiller, "cg_followKiller", "0", CVAR_ARCHIVE},
 	{ &cg_followPowerup, "cg_followPowerup", "0", CVAR_ARCHIVE},
 	{ &cg_privateDuel, "cg_privateDuel", "0", CVAR_USERINFO | CVAR_ARCHIVE},
 	{ &cg_crosshairIndicators, "cg_crosshairIndicators", "0", CVAR_ARCHIVE},
 	{ &cg_crosshairIndicatorsSpec, "cg_crosshairIndicatorsSpec", "1", CVAR_ARCHIVE},
 	{ &cg_widescreen, "cg_widescreen", "1", CVAR_ARCHIVE},
-	{ &cg_widescreenFov, "cg_widescreenFov", "1", CVAR_ARCHIVE},
+	{ &cg_fovAspectAdjust, "cg_fovAspectAdjust", "0", CVAR_ARCHIVE},
 
 	{ &cg_ui_myteam, "ui_myteam", "0", CVAR_ROM|CVAR_INTERNAL},
+	{ &cg_com_maxfps, "com_maxfps", "", 0},
 
 /*
 Ghoul2 Insert Start
@@ -787,7 +789,9 @@ void CG_RegisterCvars( void ) {
 	forceModelModificationCount = cg_forceModel.modificationCount;
 	widescreenModificationCount = cg_widescreen.modificationCount;
 
-	trap_Cvar_Register(NULL, GAMEVERSION, GIT_VERSION, CVAR_USERINFO | CVAR_ROM );
+	trap_Cvar_Register(NULL, GAMEVERSION, "", CVAR_USERINFO | CVAR_ROM );
+	// workaround for userinfo not being resent when registering an
+	// userinfo cvar in retail engine
 	trap_Cvar_Set( GAMEVERSION, GIT_VERSION );
 
 	trap_Cvar_Register(NULL, "model", DEFAULT_MODEL, CVAR_USERINFO | CVAR_ARCHIVE );

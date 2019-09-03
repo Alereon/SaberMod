@@ -4,7 +4,7 @@ This file is part of SaberMod - Star Wars Jedi Knight II: Jedi Outcast mod.
 
 Copyright (C) 1999-2000 Id Software, Inc.
 Copyright (C) 1999-2002 Activision
-Copyright (C) 2015-2018 Witold Pilat <witold.pilat@gmail.com>
+Copyright (C) 2015-2019 Witold Pilat <witold.pilat@gmail.com>
 
 This program is free software; you can redistribute it and/or modify it
 under the terms and conditions of the GNU General Public License,
@@ -410,7 +410,7 @@ typedef struct {
 // MUST be dealt with in G_InitSessionData() / G_ReadSessionData() / G_WriteSessionData()
 typedef struct {
 	team_t				sessionTeam;
-	int					spectatorTime;		// for determining next-in-line to play
+	int					spectatorNum;		// for determining next-in-line to play
 	spectatorState_t	spectatorState;
 	int					spectatorClient;	// for chasecam and follow mode
 	int					wins, losses;		// tournament stats
@@ -530,6 +530,7 @@ struct gclient_s {
 	int			airOutTime;			// time the players needs to breathe
 
 	int			lastKillTime;		// for multiple kill rewards
+	int			readyTime;			// last time ready command was issued
 
 	qboolean	fireHeld;			// used for hook
 	gentity_t	*hook;				// grapple hook if out
@@ -974,6 +975,7 @@ void FindIntermissionPoint( void );
 void SetLeader(team_t team, int client);
 void CheckTeamLeader( team_t team );
 void G_RunThink (gentity_t *ent);
+void AddTournamentQueue(gclient_t *client);
 void G_LogPrintf( int event, const char *fmt, ... ) __attribute__ ((format (printf, 2, 3)));
 void SendScoreboardMessageToAllClients( void );
 void QDECL G_Printf( const char *fmt, ... ) __attribute__ ((format (printf, 1, 2)));
@@ -1020,7 +1022,7 @@ void Svcmd_GameMem_f( void );
 // g_session.c
 //
 void G_ReadSessionData( gclient_t *client );
-void G_InitSessionData( gclient_t *client, char *userinfo, qboolean isBot );
+void G_InitSessionData( gclient_t *client, char *userinfo, qboolean isBot, qboolean firstTime );
 
 void G_InitWorldSession( void );
 void G_WriteSessionData( void );
@@ -1100,8 +1102,8 @@ void G_PrintStats(void);
 void G_LogStats(void);
 
 // g_dimensions.c
-#define DEFAULT_DIMENSION	0x1
-#define ALL_DIMENSIONS		0xffffffff
+#define DEFAULT_DIMENSION	(1u << TEAM_FREE)
+#define ALL_DIMENSIONS		0xffffffffu
 
 void G_BlameForEntity( int blame, gentity_t *ent );
 unsigned G_GetFreeDuelDimension(void);
@@ -1288,6 +1290,11 @@ extern	vmCvar_t	g_unlaggedMaxPing;
 extern	vmCvar_t	g_timeoutLimit;
 extern	vmCvar_t	g_requireClientside;
 extern	vmCvar_t	g_allowRefVote;
+extern	vmCvar_t	g_antiWarp;
+extern	vmCvar_t	g_antiWarpTime;
+extern	vmCvar_t	g_spSkill;
+extern	vmCvar_t	g_pushableItems;
+extern	vmCvar_t	g_refereePassword;
 
 void	trap_Print( const char *fmt );
 Q_NORETURN void	trap_Error( const char *fmt );

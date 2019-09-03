@@ -4,7 +4,7 @@ This file is part of SaberMod - Star Wars Jedi Knight II: Jedi Outcast mod.
 
 Copyright (C) 1999-2000 Id Software, Inc.
 Copyright (C) 1999-2002 Activision
-Copyright (C) 2015-2018 Witold Pilat <witold.pilat@gmail.com>
+Copyright (C) 2015-2019 Witold Pilat <witold.pilat@gmail.com>
 
 This program is free software; you can redistribute it and/or modify it
 under the terms and conditions of the GNU General Public License,
@@ -660,6 +660,19 @@ typedef struct {
 #define MAX_REWARDSTACK		10
 #define MAX_SOUNDBUFFER		20
 
+typedef enum {
+	SPECMODE_FOLLOW,		// standard following mode
+	SPECMODE_FREEANGLES,	// spectator controls absolute camera angles
+	SPECMODE_MAX
+} specMode_t;
+
+typedef struct {
+	qboolean	following;			// if we're following another player
+	specMode_t	mode;
+	int			delta_angles[3];	// delta angles for free angles mode
+	int			thirdPersonRange;	// precalculated third person range
+} specData_t;
+
 //======================================================================
 
 // all cg.stepTime, cg.duckTime, cg.landTime, etc are set to cg.time when the action
@@ -711,6 +724,7 @@ typedef struct {
 	qboolean	renderingThirdPerson;		// during deaths, chasecams, etc
 
 	int			seekTime;			// seek to given serverTime
+	qboolean	fastSeek;			// don't draw any intermediate frames
 	char		savedmaxfps[16];	// save com_maxfps value
 
 	// prediction state
@@ -757,6 +771,9 @@ typedef struct {
 
 	qboolean	hasFallVector;
 	vec3_t		fallVector;
+
+	// following spectator mode data
+	specData_t	spec;
 
 	// zoom key
 	qboolean	zoomed;
@@ -1607,18 +1624,18 @@ extern	vmCvar_t		cg_redTeamName;
 extern	vmCvar_t		cg_blueTeamName;
 extern	vmCvar_t		cg_currentSelectedPlayer;
 extern	vmCvar_t		cg_currentSelectedPlayerName;
-extern	vmCvar_t		cg_singlePlayer;
 extern	vmCvar_t		cg_enableDust;
 extern	vmCvar_t		cg_enableBreath;
-extern	vmCvar_t		cg_singlePlayerActive;
 extern  vmCvar_t		cg_recordSPDemo;
 extern  vmCvar_t		cg_recordSPDemoName;
 
 extern	vmCvar_t		cg_chatBeep;
-extern	vmCvar_t		cg_camerafps;
+extern	vmCvar_t		cg_smoothCamera;
+extern	vmCvar_t		cg_smoothCameraFPS;
 extern	vmCvar_t		cg_crosshairColor;
 extern	vmCvar_t		cg_darkenDeadBodies;
 extern	vmCvar_t		cg_drawClock;
+extern	vmCvar_t		cg_drawFollow;
 extern	vmCvar_t		cg_drawSpectatorHints;
 extern	vmCvar_t		cg_duelGlow;
 extern	vmCvar_t		cg_fastSeek;
@@ -1628,9 +1645,10 @@ extern	vmCvar_t		cg_privateDuel;
 extern	vmCvar_t		cg_crosshairIndicators;
 extern	vmCvar_t		cg_crosshairIndicatorsSpec;
 extern	vmCvar_t		cg_widescreen;
-extern	vmCvar_t		cg_widescreenFov;
+extern	vmCvar_t		cg_fovAspectAdjust;
 
 extern	vmCvar_t		cg_ui_myteam;
+extern	vmCvar_t		cg_com_maxfps;
 /*
 Ghoul2 Insert Start
 */

@@ -4,7 +4,7 @@ This file is part of SaberMod - Star Wars Jedi Knight II: Jedi Outcast mod.
 
 Copyright (C) 1999-2000 Id Software, Inc.
 Copyright (C) 1999-2002 Activision
-Copyright (C) 2015-2018 Witold Pilat <witold.pilat@gmail.com>
+Copyright (C) 2015-2019 Witold Pilat <witold.pilat@gmail.com>
 
 This program is free software; you can redistribute it and/or modify it
 under the terms and conditions of the GNU General Public License,
@@ -1010,7 +1010,7 @@ ClientSetName
 ============
 */
 static void ClientSetName( gclient_t *client, const char *in ) {
-	char	cleanName[MAX_NETNAME - 3]; // "(9)" suffix
+	char	cleanName[MAX_NETNAME - 5]; // "^7(1)" suffix
 	char	*name;
 	int		clientNum;
 	int		i, num;
@@ -1058,7 +1058,7 @@ static void ClientSetName( gclient_t *client, const char *in ) {
             characters++;
             *p++ = ch;
         }
-    } while ( ch != '\0' && p < end && characters + spaces < MAX_NAME_LEN - 3);
+    } while ( ch != '\0' && p < end && characters + spaces < MAX_NAME_LEN - 3); // "(1)" suffix
 
     *p = '\0';
 
@@ -1088,7 +1088,7 @@ static void ClientSetName( gclient_t *client, const char *in ) {
 		if (free) {
 			break;
 		}
-		Com_sprintf(name, MAX_NETNAME, "%s(%c)", cleanName, '0' + num);
+		Com_sprintf(name, MAX_NETNAME, "%s" S_COLOR_WHITE "(%c)", cleanName, '0' + num);
 		num++;
 	}
 }
@@ -1462,11 +1462,11 @@ const char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 	client->pers.connected = CON_CONNECTING;
 	client->pers.enterTime = level.time;
 
+	G_ReadSessionData( client );
 	// read or initialize the session data
 	if ( firstTime || level.newSession ) {
-		G_InitSessionData( client, userinfo, isBot );
+		G_InitSessionData( client, userinfo, isBot, firstTime );
 	}
-	G_ReadSessionData( client );
 
 	if( isBot ) {
 		ent->r.svFlags |= SVF_BOT;
@@ -2194,8 +2194,8 @@ void ClientSpawn(gentity_t *ent) {
 
 	// run a client frame to drop exactly to the floor,
 	// initialize animations and other things
-	client->ps.commandTime = client->pers.cmd.serverTime - 100;
 	if ( !(ent->r.svFlags & SVF_BOT) ) {
+		client->ps.commandTime = client->pers.cmd.serverTime - 100;
 		ClientThink_real( ent );
 	}
 
