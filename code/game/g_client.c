@@ -925,7 +925,7 @@ qboolean ValidateTeam( int ignoreClientNum, team_t team )
 	if ( level.gametype == GT_TOURNAMENT && count >= 2 ) {
 		return qfalse;
 	}
-	if ( g_teamsize.integer > 0 && count >= g_teamsize.integer ) {
+	if ( GT_Team(team) && g_teamsize.integer > 0 && count >= g_teamsize.integer ) {
 		return qfalse;
 	}
 	if ( team == TEAM_RED || team == TEAM_BLUE ) {
