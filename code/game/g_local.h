@@ -108,6 +108,7 @@ typedef enum {
 } voteCmd_t;
 
 q_static_assert(CV_MAX <= 32);
+#define CV_Restart(x) (x >= CV_MAP_RESTART && x <= CV_GAMETYPE)
 
 typedef enum {
 	CTV_INVALID,
@@ -640,6 +641,8 @@ typedef struct {
 	int			voteArg;				// vote argument for CheckVote
 	int			voteClient;				// client who called current/last vote
 
+	qboolean	voteDelayed;
+
 	// team voting state
 	teamVoteCmd_t	teamVoteCmd[2];		// current vote
 	int			teamVoteArg[2];
@@ -692,6 +695,9 @@ typedef struct {
 	int			duelist1;
 	int			duelist2;
 	qboolean	duelExit;
+
+	int			duelCount;
+	int			duelTime;
 } level_locals_t;
 
 //
@@ -1018,6 +1024,7 @@ void ClientEndFrame			( gentity_t *ent );
 void G_RunClient			( gentity_t *ent );
 void G_Respawn				( gentity_t *ent );
 void G_UpdateClientReadyFlags( void );
+int G_DuelCount( void );
 
 //
 // g_team.c
@@ -1311,6 +1318,7 @@ extern	vmCvar_t	g_spSkill;
 extern	vmCvar_t	g_pushableItems;
 extern	vmCvar_t	g_refereePassword;
 extern	vmCvar_t	g_allowTeamVote;
+extern	vmCvar_t	g_duelTimeLimit;
 
 void	trap_Print( const char *fmt );
 Q_NORETURN void	trap_Error( const char *fmt );

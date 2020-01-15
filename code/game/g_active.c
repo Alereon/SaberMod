@@ -1135,6 +1135,24 @@ static void G_FinishDuel ( gentity_t *ent )
 	}
 }
 
+int G_DuelCount( void )
+{
+	int i, count = 0;
+
+	for (i = 0; i < level.numConnectedClients; i++) {
+		gentity_t *ent = &g_entities[i];
+
+		if ( ent->inuse && ent->client->ps.duelInProgress)
+			count++;
+	}
+
+	if (count == 0) {
+		return 0;
+	} else {
+		return (count / 2);
+	}
+}
+
 /*
 ==============
 ClientThink

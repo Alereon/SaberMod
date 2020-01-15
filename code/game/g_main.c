@@ -170,6 +170,7 @@ vmCvar_t	g_spSkill;
 vmCvar_t	g_pushableItems;
 vmCvar_t	g_refereePassword;
 vmCvar_t	g_allowTeamVote;
+vmCvar_t	g_duelTimeLimit;
 
 
 // bk001129 - made static to avoid aliasing
@@ -347,6 +348,7 @@ static cvarTable_t gameCvarTable[] = {
 	{ &g_pushableItems, "g_pushableItems", "0", CVAR_ARCHIVE | CVAR_LATCH, 0, qfalse },
 	{ &g_refereePassword, "g_refereePassword", "", CVAR_ARCHIVE, 0, qfalse },
 	{ &g_allowTeamVote, "g_allowTeamVote", "-1", CVAR_ARCHIVE, 0, qfalse },
+	{ &g_duelTimeLimit, "g_duelTimeLimit", "60", CVAR_ARCHIVE, 0, qtrue },
 };
 
 void G_InitGame					( int levelTime, int randomSeed, int restart );
@@ -2682,6 +2684,43 @@ static void G_AnnouncePollResults( void ) {
 			level.voteYes, level.voteNo, withdrew ) );
 }
 
+qboolean DelayVote(void)
+{
+	if (level.voteDelayed)
+	{
+		if (G_DuelCount() == 0)
+		{
+			trap_SendServerCommand(-1, va("print \"All remaining duels have finished, the vote: '%s' gets executed in 3 seconds.\n\"", level.voteDisplayString));
+			level.voteExecuteTime = level.time + 3000;
+			level.voteDelayed = qfalse;
+			return qfalse;
+		}
+		else if (level.duelCount != G_DuelCount())
+		{
+			level.duelCount = G_DuelCount();
+			trap_SendServerCommand(-1, va("print \"The remaining %d duel(s) must finish before the vote gets executed.\n\"", level.duelCount));
+			if (!level.duelTime)
+			{
+				trap_SendServerCommand(-1, va("print \"All duellers have %d seconds remaining to finish their duel.\n\"", g_duelTimeLimit.integer));
+				level.duelTime = level.time + g_duelTimeLimit.integer * 1000;
+			}
+			return qtrue;
+		}
+		else if (level.time > level.duelTime)
+		{
+			trap_SendServerCommand(-1, va("print \"The remaining time to finish your duel has ended, the vote: '%s' gets executed in 3 seconds.\n\"", level.voteDisplayString));
+			level.voteExecuteTime = level.time + 3000;
+			level.voteDelayed = qfalse;
+			return qfalse;
+		}
+		return qtrue;
+	}
+	else
+	{
+		return qfalse;
+	}
+}
+
 /*
 ==================
 CheckVote
@@ -2765,6 +2804,9 @@ void CheckVote( void ) {
 		if ( level.voteReferee == VOTE_YES ) {
 			trap_SendServerCommand( -1, va("print \"%s\n\"", "Vote passed by a referee decision.") );
 			level.voteExecuteTime = level.time + 3000;
+			if (CV_Restart(level.voteCmd) && G_DuelCount() != 0) {
+				level.voteDelayed = qtrue;
+			}
 			G_LogPrintf( LOG_VOTE | LOG_REFEREE, "Referee: %d VotePassed: %d %d %d: %s\n",
 				level.voteClient, level.voteCmd, level.voteYes, level.voteNo,
 				level.voteDisplayString );
@@ -2774,6 +2816,9 @@ void CheckVote( void ) {
 			// execute the command, then remove the vote
 			trap_SendServerCommand( -1, va("print \"%s\n\"", G_GetStripEdString("SVINGAME", "VOTEPASSED")) );
 			level.voteExecuteTime = level.time + 3000;
+			if (CV_Restart(level.voteCmd) && G_DuelCount() != 0) {
+			level.voteDelayed = qtrue;
+			}
 			G_LogPrintf( LOG_VOTE, "VotePassed: %d %d %d: %s\n", level.voteCmd,
 				level.voteYes, level.voteNo, level.voteDisplayString );
 		} else if ( level.voteYes == 0 || level.voteNo >= level.numVotingClients/2 ) {
@@ -2786,7 +2831,6 @@ void CheckVote( void ) {
 	}
 	level.voteTime = 0;
 	trap_SetConfigstring( CS_VOTE_TIME, "" );
-
 }
 
 /*
@@ -3404,6 +3448,7 @@ end = trap_Milliseconds();
 	CheckTeamStatus();
 
 	// cancel vote if timed out
+	if (!DelayVote())
 	CheckVote();
 
 	// check team votes

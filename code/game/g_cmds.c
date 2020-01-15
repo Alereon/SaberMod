@@ -1814,6 +1814,14 @@ void Cmd_CallVote_f( gentity_t *ent ) {
 			return;
 		}
 
+		if (level.voteDelayed)
+		{
+			G_SendServerCommand(ent - g_entities,
+				"print \"You cannot call for a new vote when there is a vote already waiting to be executed.\n\""
+				);
+			return;
+		}
+
 		if ( level.voteTime || level.voteExecuteTime ) {
 			G_SendServerCommand( ent-g_entities, "print \"%s\n\"",
 				G_GetStripEdString("SVINGAME", "VOTEINPROGRESS") );
@@ -2625,6 +2633,12 @@ void Cmd_EngageDuel_f(gentity_t *ent)
 
 	if (!g_privateDuel.integer)
 	{
+		return;
+	}
+
+	if (level.voteDelayed)
+	{
+		trap_SendServerCommand(ent - g_entities, va("print \"You cannot start a new duel when there is a vote waiting to be executed.\n\""));
 		return;
 	}
 
