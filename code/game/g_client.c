@@ -1481,10 +1481,10 @@ const char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 	// get and distribute relevent paramters
 	ClientUserinfoChanged( clientNum );
 	if ( isBot ) {
-		G_LogPrintf( LOG_CONNECT, "BotConnect: %i: %s connected\n",
+		G_LogPrintf( LOG_CONNECT, "BotConnect: %i: %s" S_COLOR_WHITE " connected\n",
 			clientNum, client->info.netname);
 	} else {
-		G_LogPrintf( LOG_CONNECT, "ClientConnect: %i %s: %s connected\n",
+		G_LogPrintf( LOG_CONNECT, "ClientConnect: %i %s: %s" S_COLOR_WHITE " connected\n",
 			clientNum, address, client->info.netname);
 	}
 
@@ -1694,7 +1694,7 @@ void ClientBegin( int clientNum, qboolean allowTeamReset ) {
 		if ( client->sess.sessionTeam != TEAM_SPECTATOR )
 			client->sess.spectatorState = SPECTATOR_NOT;
 
-	G_LogPrintf( LOG_BEGIN, "ClientBegin: %i %s %s: %s joined the %s team\n",
+	G_LogPrintf( LOG_BEGIN, "ClientBegin: %i %s %s: %s" S_COLOR_WHITE " joined the %s team\n",
 		clientNum, BG_TeamName(client->sess.sessionTeam, CASE_UPPER), gameversion,
 		client->info.netname, BG_TeamName(client->sess.sessionTeam, CASE_NORMAL) );
 
@@ -2291,10 +2291,10 @@ void ClientDisconnect( int clientNum ) {
 	}
 
 	if ( ent->r.svFlags & SVF_BOT ) {
-		G_LogPrintf( LOG_CONNECT, "BotDisconnect: %i: %s disconnected\n",
+		G_LogPrintf( LOG_CONNECT, "BotDisconnect: %i: %s " S_COLOR_WHITE "disconnected\n",
 			clientNum, ent->client->info.netname );
 	} else {
-		G_LogPrintf( LOG_CONNECT, "ClientDisconnect: %i: %s disconnected\n",
+		G_LogPrintf( LOG_CONNECT, "ClientDisconnect: %i: %s " S_COLOR_WHITE "disconnected\n",
 			clientNum, ent->client->info.netname );
 	}
 

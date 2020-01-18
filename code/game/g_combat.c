@@ -1852,7 +1852,7 @@ static int G_LogPlayerDie( gentity_t *self, gentity_t *attacker, meansOfDeath_t 
 		obit = modNames[ meansOfDeath ];
 	}
 
-	G_LogPrintf(LOG_KILL, "Kill: %i %i %i: %s killed %s by %s\n",
+	G_LogPrintf(LOG_KILL, "Kill: %i %i %i: %s" S_COLOR_WHITE " killed %s" S_COLOR_WHITE " by %s\n",
 				killer, self->s.number, meansOfDeath, killerName,
 				self->client->info.netname, obit );
 
@@ -1861,11 +1861,11 @@ static int G_LogPlayerDie( gentity_t *self, gentity_t *attacker, meansOfDeath_t 
 		int spawnTime = (level.clients[level.sortedClients[0]].respawnTime > level.clients[level.sortedClients[1]].respawnTime) ? level.clients[level.sortedClients[0]].respawnTime : level.clients[level.sortedClients[1]].respawnTime;
 		G_LogPrintf(LOG_AUSTRIAN, "Duel Kill Details:\n");
 		G_LogPrintf(LOG_AUSTRIAN, "Kill Time: %d\n", level.time-spawnTime );
-		G_LogPrintf(LOG_AUSTRIAN, "victim: %s, hits on enemy %d\n",
+		G_LogPrintf(LOG_AUSTRIAN, "victim: %s" S_COLOR_WHITE ", hits on enemy %d\n",
 			self->client->info.netname, self->client->pers.persistant[PERS_HITS] );
 		if ( attacker && attacker->client )
 		{
-			G_LogPrintf(LOG_AUSTRIAN, "killer: %s, hits on enemy %d, health: %d\n",
+			G_LogPrintf(LOG_AUSTRIAN, "killer: %s" S_COLOR_WHITE ", hits on enemy %d, health: %d\n",
 				attacker->client->info.netname,
 				attacker->client->pers.persistant[PERS_HITS], attacker->health );
 			//also - if MOD_SABER, list the animation and saber style
