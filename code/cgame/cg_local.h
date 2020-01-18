@@ -4,7 +4,7 @@ This file is part of SaberMod - Star Wars Jedi Knight II: Jedi Outcast mod.
 
 Copyright (C) 1999-2000 Id Software, Inc.
 Copyright (C) 1999-2002 Activision
-Copyright (C) 2015-2019 Witold Pilat <witold.pilat@gmail.com>
+Copyright (C) 2015-2020 Witold Pilat <witold.pilat@gmail.com>
 
 This program is free software; you can redistribute it and/or modify it
 under the terms and conditions of the GNU General Public License,
@@ -908,6 +908,7 @@ typedef struct {
 	vec3_t			saberFlashPos;
 
 	qboolean		queueMacroscan;
+	qboolean		demorecording;
 /*
 Ghoul2 Insert Start
 */
@@ -1171,6 +1172,9 @@ typedef struct {
 	sfxHandle_t deploySeeker;
 	sfxHandle_t medkitSound;
 
+	sfxHandle_t pauseSound;
+	sfxHandle_t unpauseSound;
+
 	// teamplay sounds
 	sfxHandle_t redScoredSound;
 	sfxHandle_t blueScoredSound;
@@ -1398,8 +1402,10 @@ typedef struct {
 	int				fDisable;
 	qboolean		privateDuel;
 	qboolean		instagib;
+	gameStatus_t	status;
 	qboolean		macroscan;
 
+	char			mappath[MAX_QPATH];
 	char			mapname[MAX_QPATH];
 	char			redTeam[MAX_QPATH];
 	char			blueTeam[MAX_QPATH];
@@ -1646,6 +1652,8 @@ extern	vmCvar_t		cg_crosshairIndicators;
 extern	vmCvar_t		cg_crosshairIndicatorsSpec;
 extern	vmCvar_t		cg_widescreen;
 extern	vmCvar_t		cg_fovAspectAdjust;
+extern	vmCvar_t		cg_autoSave;
+extern	vmCvar_t		cg_autoSaveFormat;
 
 extern	vmCvar_t		cg_ui_myteam;
 extern	vmCvar_t		cg_com_maxfps;
@@ -1775,6 +1783,9 @@ void CG_PrevInventory_f(void);
 void CG_NextForcePower_f(void);
 void CG_PrevForcePower_f(void);
 void CG_WideScreenMode(qboolean on);
+const char *CG_AutoSaveFilename( void );
+void CG_StartAutoDemo( void );
+void CG_StopAutoDemo( void );
 
 //
 // cg_view.c
@@ -1858,26 +1869,6 @@ float CG_Text_Width(const char *text, float scale, font_t iMenuFont);
 float CG_Text_Height(const char *text, float scale, font_t iMenuFont);
 qboolean CG_YourTeamHasFlag(void);
 qboolean CG_OtherTeamHasFlag(void);
-
-// cg_newDraw.c
-void CG_SelectPrevPlayer(void);
-void CG_SelectNextPlayer(void);
-float CG_GetValue(int ownerDraw);
-qboolean CG_OwnerDrawVisible(int flags);
-void CG_RunMenuScript(const char **args);
-qboolean CG_DeferMenuScript(const char **args);
-void CG_ShowResponseHead(void);
-void CG_SetPrintString(int type, const char *p);
-void CG_InitTeamChat(void);
-void CG_GetTeamColor(vec4_t *color);
-const char *CG_GetGameStatusText(void);
-const char *CG_GetKillerText(void);
-void CG_Draw3DModel( float x, float y, float w, float h, qhandle_t model, qhandle_t skin, const vec3_t origin, const vec3_t angles );
-void CG_Text_PaintChar(float x, float y, float width, float height, float scale, float s, float t, float s2, float t2, qhandle_t hShader);
-void CG_CheckOrderPending(void);
-qhandle_t CG_StatusHandle(int task);
-
-
 
 //
 // cg_player.c
@@ -2009,8 +2000,6 @@ void CG_SurfaceExplosion( vec3_t origin, vec3_t normal, float radius, float shak
 #endif
 void CG_TestLine( const vec3_t start, const vec3_t end, int time, unsigned int color, int radius);
 
-void CG_InitGlass( void );
-
 //
 // cg_snapshot.c
 //
@@ -2047,6 +2036,7 @@ void CG_VoiceChatLocal( int mode, qboolean voiceOnly, int clientNum, int color, 
 void CG_PlayBufferedVoiceChats( void );
 #endif
 void CG_UpdateConfigString( int num, qboolean init );
+void CG_PlayGameStateSounds( void );
 
 //
 // cg_playerstate.c

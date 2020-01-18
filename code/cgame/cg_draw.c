@@ -4,7 +4,7 @@ This file is part of SaberMod - Star Wars Jedi Knight II: Jedi Outcast mod.
 
 Copyright (C) 1999-2000 Id Software, Inc.
 Copyright (C) 1999-2002 Activision
-Copyright (C) 2015-2019 Witold Pilat <witold.pilat@gmail.com>
+Copyright (C) 2015-2020 Witold Pilat <witold.pilat@gmail.com>
 
 This program is free software; you can redistribute it and/or modify it
 under the terms and conditions of the GNU General Public License,
@@ -25,10 +25,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 // active (after loading) gameplay
 
 #include "cg_local.h"
-
-#include "../ui/ui_shared.h"
+#include "../../assets/ui/jk2mp/menudef.h"
 
 #ifdef MISSIONPACK
+#include "../ui/ui_shared.h"
+
 // used for scoreboard
 extern displayContextDef_t cgDC;
 menuDef_t *menuScoreboard = NULL;
@@ -1951,24 +1952,37 @@ static float CG_DrawTimer( float y ) {
 	int			mins, seconds, tens;
 	int			msec;
 
+	// msec is always growing
+	// positive - timer counting up
+	// negative - timer counting down
+
 	if (cg_drawTimer.integer >= 2) {
 		if (!cgs.timelimit) {
 			return y;
 		}
 
-		msec = cgs.timelimit * 60 * 1000;
-		if (!cg.warmup) {
-			msec -= cg.serverTime - cgs.levelStartTime;
-			// intermission or overtime
-			if (msec < 0) {
-				msec = -msec;
-			}
+		if (cg.intermissionStarted) {
+			msec = 0;
+		} else if (cg.warmup) {
+			msec = - cgs.timelimit * 60 * 1000;
+		} else {
+			msec = - cgs.timelimit * 60 * 1000 + cg.gameTime - cgs.levelStartTime;
 		}
 	} else {
-		msec = MAX(0, cg.serverTime - cgs.levelStartTime);
+		if (cg.warmup) {
+			msec = 0;
+		} else {
+			msec = cg.gameTime - cgs.levelStartTime;
+		}
 	}
 
-	seconds = msec / 1000;
+	// seconds = abs(floor(msec / 1000.0))
+	if (msec < 0) {
+		seconds = (- msec + 999) / 1000;
+	} else {
+		seconds = msec / 1000;
+	}
+
 	mins = seconds / 60;
 	seconds -= mins * 60;
 	tens = seconds / 10;
@@ -2003,7 +2017,7 @@ static void CG_DrawCountdown( void )
 	}
 
 	msec = cgs.timelimit * 60 * 1000;
-	msec -= cg.serverTime - cgs.levelStartTime;
+	msec -= cg.gameTime - cgs.levelStartTime;
 
 	if (msec < 0 || 16000 <= msec) {
 		return;
@@ -2011,7 +2025,7 @@ static void CG_DrawCountdown( void )
 
 	msec = MAX(0, msec);
 
-	s = va( "%d", msec / 1000 );
+	s = va( "%d", msec / 1000 + 1 );
 	UI_DrawProportionalString( 0.5f * cgs.screenWidth, 125, s, UI_CENTER, colorRed );
 }
 
@@ -3704,46 +3718,10 @@ static void CG_DrawTeamVote(void) {
 	if ( sec < 0 ) {
 		sec = 0;
 	}
-	if (strstr(cgs.teamVoteString[cs_offset], "leader"))
-	{
-		int i = 0;
 
-		while (cgs.teamVoteString[cs_offset][i] && cgs.teamVoteString[cs_offset][i] != ' ')
-		{
-			i++;
-		}
-
-		if (cgs.teamVoteString[cs_offset][i] == ' ')
-		{
-			int voteIndex = 0;
-			char voteIndexStr[256];
-
-			i++;
-
-			while (cgs.teamVoteString[cs_offset][i])
-			{
-				voteIndexStr[voteIndex] = cgs.teamVoteString[cs_offset][i];
-				voteIndex++;
-				i++;
-			}
-			voteIndexStr[voteIndex] = 0;
-
-			voteIndex = atoi(voteIndexStr);
-
-			s = va("TEAMVOTE(%i):(Make %s" S_COLOR_WHITE " the new team leader) yes:%i no:%i", sec, cgs.clientinfo[voteIndex].name,
-									cgs.teamVoteYes[cs_offset], cgs.teamVoteNo[cs_offset] );
-		}
-		else
-		{
-			s = va("TEAMVOTE(%i):%s yes:%i no:%i", sec, cgs.teamVoteString[cs_offset],
-									cgs.teamVoteYes[cs_offset], cgs.teamVoteNo[cs_offset] );
-		}
-	}
-	else
-	{
-		s = va("TEAMVOTE(%i):%s yes:%i no:%i", sec, cgs.teamVoteString[cs_offset],
+	s = va("TEAMVOTE(%i):%s yes:%i no:%i", sec, cgs.teamVoteString[cs_offset],
 								cgs.teamVoteYes[cs_offset], cgs.teamVoteNo[cs_offset] );
-	}
+
 	CG_DrawSmallString( 4, 90, s, 1.0F );
 }
 
@@ -3994,9 +3972,8 @@ static void CG_DrawWarmup( void ) {
 
 	if (cgs.unpauseTime > cg.serverTime)
 	{
-		sec = (cgs.unpauseTime - cg.serverTime) / 1000;
-
-		if (sec < 60) {
+		if (cgs.unpauseTime != UNPAUSE_TIME_NEVER) {
+			sec = (cgs.unpauseTime - cg.serverTime) / 1000 + 1;
 			s = va(CG_GetStripEdString("SABERINGAME", "MATCH_WILL_RESUME"), sec); // "Game will resume in %d seconds"
 		} else {
 			s = CG_GetStripEdString("SABERINGAME", "MATCH_PAUSED");
@@ -4073,9 +4050,7 @@ static void CG_DrawWarmup( void ) {
 
 	sec = ( sec - cg.gameTime );
 	if ( sec < 0 ) {
-		cg.warmup = 0;
 		sec = 0;
-		return;
 	}
 	sec /= 1000;
 //	s = va( "Starts in: %i", sec + 1 );

@@ -4,7 +4,7 @@ This file is part of SaberMod - Star Wars Jedi Knight II: Jedi Outcast mod.
 
 Copyright (C) 1999-2000 Id Software, Inc.
 Copyright (C) 1999-2002 Activision
-Copyright (C) 2015-2019 Witold Pilat <witold.pilat@gmail.com>
+Copyright (C) 2015-2020 Witold Pilat <witold.pilat@gmail.com>
 
 This program is free software; you can redistribute it and/or modify it
 under the terms and conditions of the GNU General Public License,
@@ -588,7 +588,7 @@ static void CG_OffsetThirdPersonView( void )
 	dtime += cg.predictedTimeFrac - cam.lastTimeFrac;
 
 	// If we went back in time for some reason, or if we just started, reset the sample.
-	if (cam.lastTime == 0 || dtime < 0.0f || cg.thisFrameTeleport || cgs.unpauseTime > cg.serverTime)
+	if (cam.lastTime == 0 || dtime < 0.0f || cg.thisFrameTeleport || cg.snap->ps.pm_type == PM_PAUSED)
 	{
 		CG_ResetThirdPersonViewDamp();
 	}
@@ -1790,6 +1790,8 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	{
 		trap_FX_AddScheduledEffects();
 	}
+
+	CG_PlayGameStateSounds();
 
 	// add buffered sounds
 	CG_PlayBufferedSounds();

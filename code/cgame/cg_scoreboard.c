@@ -4,7 +4,7 @@ This file is part of SaberMod - Star Wars Jedi Knight II: Jedi Outcast mod.
 
 Copyright (C) 1999-2000 Id Software, Inc.
 Copyright (C) 1999-2002 Activision
-Copyright (C) 2015-2019 Witold Pilat <witold.pilat@gmail.com>
+Copyright (C) 2015-2020 Witold Pilat <witold.pilat@gmail.com>
 
 This program is free software; you can redistribute it and/or modify it
 under the terms and conditions of the GNU General Public License,
@@ -24,7 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 // cg_scoreboard -- draw the scoreboard on top of the game screen
 
 #include "cg_local.h"
-#include "../ui/ui_shared.h"
+#include "../../assets/ui/jk2mp/menudef.h"
 
 #define	SCOREBOARD_X		(0.5f * cgs.screenWidth - 320.0f)
 

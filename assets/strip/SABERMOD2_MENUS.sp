@@ -1,7 +1,7 @@
 VERSION 1
 ID 138
 REFERENCE SABERMENUS
-COUNT 93
+COUNT 100
 INDEX 0
 {
    REFERENCE TEAM_SIZE
@@ -365,11 +365,11 @@ INDEX 39
 INDEX 40
 {
    REFERENCE MATCH_DESC
-   TEXT_LANGUAGE1 "Restrict spectator chat and disable damage plums."
-   TEXT_LANGUAGE2 "Restrict spectator chat and disable damage plums."
-   TEXT_LANGUAGE3 "Restrict spectator chat and disable damage plums."
-   TEXT_LANGUAGE6 "Restrict spectator chat and disable damage plums."
-   TEXT_LANGUAGE8 "Restrict spectator chat and disable damage plums."
+   TEXT_LANGUAGE1 "Prevent spectators from interfering."
+   TEXT_LANGUAGE2 "Prevent spectators from interfering."
+   TEXT_LANGUAGE3 "Prevent spectators from interfering."
+   TEXT_LANGUAGE6 "Prevent spectators from interfering."
+   TEXT_LANGUAGE8 "Prevent spectators from interfering."
 }
 INDEX 41
 {
@@ -383,11 +383,11 @@ INDEX 41
 INDEX 42
 {
    REFERENCE PRACTICE_DESC
-   TEXT_LANGUAGE1 "Disable match mode restrictions."
-   TEXT_LANGUAGE2 "Disable match mode restrictions."
-   TEXT_LANGUAGE3 "Disable match mode restrictions."
-   TEXT_LANGUAGE6 "Disable match mode restrictions."
-   TEXT_LANGUAGE8 "Disable match mode restrictions."
+   TEXT_LANGUAGE1 "Disable spectator restrictions."
+   TEXT_LANGUAGE2 "Disable spectator restrictions."
+   TEXT_LANGUAGE3 "Disable spectator restrictions."
+   TEXT_LANGUAGE6 "Disable spectator restrictions."
+   TEXT_LANGUAGE8 "Disable spectator restrictions."
 }
 INDEX 43
 {
@@ -853,4 +853,74 @@ INDEX 92
    TEXT_LANGUAGE3 "Ready up during warmup to start a match."
    TEXT_LANGUAGE6 "Ready up during warmup to start a match."
    TEXT_LANGUAGE8 "Ready up during warmup to start a match."
+}
+INDEX 93
+{
+   REFERENCE ABORT
+   NOTES "Abort match callvote button"
+   TEXT_LANGUAGE1 "Abort Match"
+   TEXT_LANGUAGE2 "Abort Match"
+   TEXT_LANGUAGE3 "Abort Match"
+   TEXT_LANGUAGE6 "Abort Match"
+   TEXT_LANGUAGE8 "Abort Match"
+}
+INDEX 94
+{
+   REFERENCE ABORT_DESC
+   NOTES "Abort match callvote button description"
+   TEXT_LANGUAGE1 "Begin Vote to abort match."
+   TEXT_LANGUAGE2 "Begin Vote to abort match."
+   TEXT_LANGUAGE3 "Begin Vote to abort match."
+   TEXT_LANGUAGE6 "Begin Vote to abort match."
+   TEXT_LANGUAGE8 "Begin Vote to abort match."
+}
+INDEX 95
+{
+   REFERENCE AUTOSAVE
+   NOTES "Options / Auto Save button"
+   TEXT_LANGUAGE1 "Auto Save:"
+   TEXT_LANGUAGE2 "Auto Save:"
+   TEXT_LANGUAGE3 "Auto Save:"
+   TEXT_LANGUAGE6 "Auto Save:"
+   TEXT_LANGUAGE8 "Auto Save:"
+}
+INDEX 96
+{
+   REFERENCE AUTOSAVE_DESC
+   NOTES "Options / Auto Save button description"
+   TEXT_LANGUAGE1 "Automatically save match record."
+   TEXT_LANGUAGE2 "Automatically save match record."
+   TEXT_LANGUAGE3 "Automatically save match record."
+   TEXT_LANGUAGE6 "Automatically save match record."
+   TEXT_LANGUAGE8 "Automatically save match record."
+}
+INDEX 97
+{
+   REFERENCE SAVE_SCREEN
+   NOTES "Options / Auto Save option"
+   TEXT_LANGUAGE1 "Screenshot"
+   TEXT_LANGUAGE2 "Screenshot"
+   TEXT_LANGUAGE3 "Screenshot"
+   TEXT_LANGUAGE6 "Screenshot"
+   TEXT_LANGUAGE8 "Screenshot"
+}
+INDEX 98
+{
+   REFERENCE SAVE_DEMO
+   NOTES "Options / Auto Save option"
+   TEXT_LANGUAGE1 "Demo"
+   TEXT_LANGUAGE2 "Demo"
+   TEXT_LANGUAGE3 "Demo"
+   TEXT_LANGUAGE6 "Demo"
+   TEXT_LANGUAGE8 "Demo"
+}
+INDEX 99
+{
+   REFERENCE SAVE_BOTH
+   NOTES "Options / Auto Save option"
+   TEXT_LANGUAGE1 "Demo & Screenshot"
+   TEXT_LANGUAGE2 "Demo & Screenshot"
+   TEXT_LANGUAGE3 "Demo & Screenshot"
+   TEXT_LANGUAGE6 "Demo & Screenshot"
+   TEXT_LANGUAGE8 "Demo & Screenshot"
 }

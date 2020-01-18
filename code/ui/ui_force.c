@@ -4,7 +4,7 @@ This file is part of SaberMod - Star Wars Jedi Knight II: Jedi Outcast mod.
 
 Copyright (C) 1999-2000 Id Software, Inc.
 Copyright (C) 1999-2002 Activision
-Copyright (C) 2015-2019 Witold Pilat <witold.pilat@gmail.com>
+Copyright (C) 2015-2020 Witold Pilat <witold.pilat@gmail.com>
 
 This program is free software; you can redistribute it and/or modify it
 under the terms and conditions of the GNU General Public License,
@@ -155,10 +155,8 @@ void UI_DrawForceStars(rectDef_t *rect, float scale, vec4_t color, int textStyle
 
 	if (1)	// if (val)
 	{
-		xPos = rect->x * uiInfo.screenXFactorInv;
-		yPos = (rect->y + 6) * uiInfo.screenYFactorInv;
-
-		UI_WidescreenMode(qtrue);
+		xPos = rect->x;
+		yPos = (rect->y + 6);
 
 		for (i=FORCE_LEVEL_1;i<=max;i++)
 		{
@@ -186,8 +184,6 @@ void UI_DrawForceStars(rectDef_t *rect, float scale, vec4_t color, int textStyle
 
 			xPos += width + pad;
 		}
-
-		UI_WidescreenMode(qfalse);
 	}
 }
 

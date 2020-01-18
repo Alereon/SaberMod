@@ -4,7 +4,7 @@ This file is part of SaberMod - Star Wars Jedi Knight II: Jedi Outcast mod.
 
 Copyright (C) 1999-2000 Id Software, Inc.
 Copyright (C) 1999-2002 Activision
-Copyright (C) 2015-2019 Witold Pilat <witold.pilat@gmail.com>
+Copyright (C) 2015-2020 Witold Pilat <witold.pilat@gmail.com>
 
 This program is free software; you can redistribute it and/or modify it
 under the terms and conditions of the GNU General Public License,
@@ -103,10 +103,21 @@ typedef enum {
 	CV_CAPTURELIMIT,
 	CV_POLL,
 	CV_REFEREE,
+	CV_ABORT,
 	CV_MAX
 } voteCmd_t;
 
 q_static_assert(CV_MAX <= 32);
+
+typedef enum {
+	CTV_INVALID,
+	CTV_FIRST,
+	CTV_LEADER = CTV_FIRST,
+	CTV_FORFEIT,
+	CTV_MAX
+} teamVoteCmd_t;
+
+q_static_assert(CTV_MAX <= 32);
 
 // movers are things like doors, plats, buttons, etc
 typedef enum {
@@ -630,6 +641,8 @@ typedef struct {
 	int			voteClient;				// client who called current/last vote
 
 	// team voting state
+	teamVoteCmd_t	teamVoteCmd[2];		// current vote
+	int			teamVoteArg[2];
 	char		teamVoteString[2][MAX_STRING_CHARS];
 	int			teamVoteTime[2];		// level.time vote was called
 	int			teamVoteYes[2];
@@ -658,6 +671,7 @@ typedef struct {
 
 	int			roundQueued;			// new round was qualified, but we're
 										// doing a g_roundWarmup sec countdown
+	team_t		forfeitTeam;			// Team wants to forfeit the match
 
 	qboolean	locationLinked;			// target_locations get linked
 	gentity_t	*locationHead;			// head of the location list
@@ -1287,6 +1301,7 @@ extern	vmCvar_t	g_instagib;
 extern	vmCvar_t	g_voteCooldown;
 extern	vmCvar_t	g_unlagged;
 extern	vmCvar_t	g_unlaggedMaxPing;
+extern	vmCvar_t	g_timeoutDuration;
 extern	vmCvar_t	g_timeoutLimit;
 extern	vmCvar_t	g_requireClientside;
 extern	vmCvar_t	g_allowRefVote;
@@ -1295,6 +1310,8 @@ extern	vmCvar_t	g_antiWarpTime;
 extern	vmCvar_t	g_spSkill;
 extern	vmCvar_t	g_pushableItems;
 extern	vmCvar_t	g_refereePassword;
+extern	vmCvar_t	g_allowTeamVote;
+extern	vmCvar_t	g_vampiricDamage;
 
 void	trap_Print( const char *fmt );
 Q_NORETURN void	trap_Error( const char *fmt );

@@ -4,7 +4,7 @@ This file is part of SaberMod - Star Wars Jedi Knight II: Jedi Outcast mod.
 
 Copyright (C) 1999-2000 Id Software, Inc.
 Copyright (C) 1999-2002 Activision
-Copyright (C) 2015-2019 Witold Pilat <witold.pilat@gmail.com>
+Copyright (C) 2015-2020 Witold Pilat <witold.pilat@gmail.com>
 
 This program is free software; you can redistribute it and/or modify it
 under the terms and conditions of the GNU General Public License,
@@ -186,7 +186,13 @@ static void CG_ParseServerinfo( const char *info ) {
 	cgs.maxclients = atoi( Info_ValueForKey( info, "sv_maxclients" ) );
 	cgs.privateDuel = (qboolean)atoi( Info_ValueForKey( info, "g_privateDuel" ) );
 	cgs.instagib = (qboolean)atoi( Info_ValueForKey( info, "g_instagib" ) );
+	cgs.status = (gameStatus_t)atoi( Info_ValueForKey( info, "g_status" ) );
 	mapname = Info_ValueForKey( info, "mapname" );
+
+	if (cgs.status == GAMESTATUS_WARMUP) {
+		// match aborted?
+		CG_StopAutoDemo();
+	}
 
 	val = atoi( Info_ValueForKey( info, "g_macroscan" ) );
 	if (val && !cgs.macroscan) {
@@ -199,7 +205,8 @@ static void CG_ParseServerinfo( const char *info ) {
 	//rww - You must do this one here, Info_ValueForKey always uses the same memory pointer.
 	trap_Cvar_Set ( "ui_about_mapname", mapname );
 
-	Com_sprintf( cgs.mapname, sizeof( cgs.mapname ), "maps/%s.bsp", mapname );
+	Q_strncpyz( cgs.mapname, mapname, sizeof( cgs.mapname ) );
+	Com_sprintf( cgs.mappath, sizeof( cgs.mappath ), "maps/%s.bsp", mapname );
 	Q_strncpyz( cgs.redTeam, Info_ValueForKey( info, "g_redTeam" ), sizeof(cgs.redTeam) );
 	trap_Cvar_Set("g_redTeam", cgs.redTeam);
 	Q_strncpyz( cgs.blueTeam, Info_ValueForKey( info, "g_blueTeam" ), sizeof(cgs.blueTeam) );
@@ -523,7 +530,6 @@ void CG_UpdateConfigString( int num, qboolean init )
 	}
 }
 
-
 /*
 =======================
 CG_AddToTeamChat
@@ -682,6 +688,7 @@ static void CG_MapRestart( void ) {
 		CG_Printf( "CG_MapRestart\n" );
 	}
 
+	CG_StopAutoDemo();
 	CG_InitLocalEntities();
 	CG_InitMarkPolys();
 	// CG_ClearParticles ();
@@ -1491,4 +1498,26 @@ void CG_ExecuteNewServerCommands( int latestSequence ) {
 			CG_ServerCommand();
 		}
 	}
+}
+
+/*
+====================
+CG_PlayGameStateSounds
+====================
+*/
+void CG_PlayGameStateSounds( void ) {
+	static int unpauseTime;
+
+	if (cgs.unpauseTime > cg.serverTime &&
+		cgs.unpauseTime > unpauseTime)
+	{
+		trap_S_StartLocalSound( cgs.media.pauseSound, CHAN_LOCAL_SOUND );
+	}
+
+	if (unpauseTime != 0 && cgs.unpauseTime == 0)
+	{
+		trap_S_StartLocalSound( cgs.media.unpauseSound, CHAN_LOCAL_SOUND );
+	}
+
+	unpauseTime = cgs.unpauseTime;
 }

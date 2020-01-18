@@ -4,7 +4,7 @@ This file is part of SaberMod - Star Wars Jedi Knight II: Jedi Outcast mod.
 
 Copyright (C) 1999-2000 Id Software, Inc.
 Copyright (C) 1999-2002 Activision
-Copyright (C) 2015-2019 Witold Pilat <witold.pilat@gmail.com>
+Copyright (C) 2015-2020 Witold Pilat <witold.pilat@gmail.com>
 
 This program is free software; you can redistribute it and/or modify it
 under the terms and conditions of the GNU General Public License,
@@ -149,6 +149,7 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int clientNum );
 int  CG_MVAPI_Init( int apilevel );
 void CG_MVAPI_AfterInit( int serverMessageNum, int serverCommandSequence, int clientNum );
 void CG_Shutdown( void );
+void CG_MapChange( void );
 
 void CG_CalcEntityLerpPositions( centity_t *cent );
 void CG_ROFF_NotetrackCallback( centity_t *cent, const char *notetrack);
@@ -278,6 +279,7 @@ Q_EXPORT intptr_t vmMain( intptr_t command, intptr_t arg0, intptr_t arg1, intptr
 		// this trap map be called more than once for a given map change, as the
 		// server is going to attempt to send out multiple broadcasts in hopes that
 		// the client will receive one of them
+		CG_StopAutoDemo();
 		cg.mMapChange = qtrue;
 		return 0;
 
@@ -583,6 +585,8 @@ vmCvar_t	cg_crosshairIndicators;
 vmCvar_t	cg_crosshairIndicatorsSpec;
 vmCvar_t	cg_widescreen;
 vmCvar_t	cg_fovAspectAdjust;
+vmCvar_t	cg_autoSave;
+vmCvar_t	cg_autoSaveFormat;
 
 vmCvar_t	cg_ui_myteam;
 vmCvar_t	cg_com_maxfps;
@@ -751,6 +755,8 @@ static cvarTable_t cvarTable[] = { // bk001129
 	{ &cg_crosshairIndicatorsSpec, "cg_crosshairIndicatorsSpec", "1", CVAR_ARCHIVE},
 	{ &cg_widescreen, "cg_widescreen", "1", CVAR_ARCHIVE},
 	{ &cg_fovAspectAdjust, "cg_fovAspectAdjust", "0", CVAR_ARCHIVE},
+	{ &cg_autoSave, "cg_autoSave", "0", CVAR_ARCHIVE},
+	{ &cg_autoSaveFormat, "cg_autoSaveFormat", "[date]_[time] [gametype] [map] [name]", CVAR_ARCHIVE},
 
 	{ &cg_ui_myteam, "ui_myteam", "0", CVAR_ROM|CVAR_INTERNAL},
 	{ &cg_com_maxfps, "com_maxfps", "", 0},
@@ -1401,6 +1407,9 @@ static void CG_RegisterSounds( void ) {
 
 	cgs.media.winnerSound = trap_S_RegisterSound( "sound/chars/mothma/misc/40MOM006" );
 	cgs.media.loserSound = trap_S_RegisterSound( "sound/chars/mothma/misc/40MOM010" );
+
+	cgs.media.pauseSound = trap_S_RegisterSound( "sound/effects/hologram_on" );
+	cgs.media.unpauseSound = trap_S_RegisterSound( "sound/effects/hologram_off" );
 }
 
 
@@ -1419,9 +1428,6 @@ static void CG_RegisterEffects( void )
 	{
 		CG_UpdateConfigString( CS_EFFECTS + i, qtrue );
 	}
-
-	// Set up the glass effects mini-system.
-	CG_InitGlass();
 }
 
 //===================================================================================
@@ -1483,9 +1489,9 @@ static void CG_RegisterGraphics( void ) {
 	memset( &cg.refdef, 0, sizeof( cg.refdef ) );
 	trap_R_ClearScene();
 
-	CG_LoadingString( cgs.mapname );
+	CG_LoadingString( cgs.mappath );
 
-	trap_R_LoadWorldMap( cgs.mapname );
+	trap_R_LoadWorldMap( cgs.mappath );
 
 	// precache status bar pics
 	CG_LoadingString( "game media" );
@@ -2652,14 +2658,14 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int clientNum ) {
 	}
 
 	// new config strings
-	for ( i = 0; i < CS_MAPS; i++ ) {
+	for ( i = CS_NEW; i < CS_MAPS; i++ ) {
 		CG_UpdateConfigString( i, qtrue );
 	}
 
 	// load the new map
 	CG_LoadingString( "collision map" );
 
-	trap_CM_LoadMap( cgs.mapname );
+	trap_CM_LoadMap( cgs.mappath );
 #ifdef MISSIONPACK
 	String_Init();
 #endif
@@ -2846,5 +2852,72 @@ void CG_PrevInventory_f(void)
 	{
 		cg.itemSelect = (holdable_t)bg_itemlist[cg.snap->ps.stats[STAT_HOLDABLE_ITEM]].giTag;
 		cg.invenSelectTime = cg.time;
+	}
+}
+
+const char *CG_AutoSaveFilename( void ) {
+	static char	filename[MAX_QPATH];
+	const char	*info;
+	char		date[11];
+	char		time[6];
+	char		name[MAX_NETNAME];
+	char		map[MAX_NETNAME];
+	char		hostname[MAX_NAME_LENGTH];
+	const char	*tokens[20];
+	const char	*substs[20];
+	int			numTokens = 0;
+	qtime_t		t;
+
+	trap_RealTime(&t);
+	info = CG_ConfigString( CS_SERVERINFO );
+
+	Com_sprintf(date, sizeof(date), "%04i-%02i-%02i",
+		1900 + t.tm_year, 1 + t.tm_mon, t.tm_mday);
+	tokens[numTokens] = "date";
+	substs[numTokens] = date;
+	numTokens++;
+
+	Com_sprintf(time, sizeof(time), "%02i-%02i",
+		t.tm_hour, t.tm_min );
+	tokens[numTokens] = "time";
+	substs[numTokens] = time;
+	numTokens++;
+
+	tokens[numTokens] = "gametype";
+	substs[numTokens] = gametypeShort[cgs.gametype];
+	numTokens++;
+
+	Q_strncpyz(name, cgs.clientinfo[cg.clientNum].name, sizeof(name));
+	tokens[numTokens] = "name";
+	substs[numTokens] = Q_FS_CleanStr(Q_CleanStr(name));
+	numTokens++;
+
+	Q_strncpyz(hostname, Info_ValueForKey(info, "sv_hostname"), sizeof(hostname));
+	tokens[numTokens] = "server";
+	substs[numTokens] = Q_FS_CleanStr(Q_CleanStr(hostname));
+	numTokens++;
+
+	Q_strncpyz(map, cgs.mapname, sizeof(map));
+	tokens[numTokens] = "map";
+	substs[numTokens] = Q_FS_CleanStr(Q_CleanStr(map));
+	numTokens++;
+
+	Com_ReplaceTokens(filename, sizeof(filename), cg_autoSaveFormat.string,
+		tokens, substs, numTokens);
+
+	return filename;
+}
+
+void CG_StartAutoDemo( void ) {
+	if ((cg_autoSave.integer | 2) && cgs.status != GAMESTATUS_WARMUP) {
+		trap_SendConsoleCommand(va("record \"%s\"\n", CG_AutoSaveFilename()));
+		cg.demorecording = qtrue;
+	}
+}
+
+void CG_StopAutoDemo( void ) {
+	if (cg.demorecording) {
+		trap_SendConsoleCommand("stoprecord\n");
+		cg.demorecording = qfalse;
 	}
 }
