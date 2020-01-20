@@ -2658,6 +2658,15 @@ void CheckTournament( void ) {
 			trap_Cvar_Set( "g_restarted", "1" );
 			trap_SendConsoleCommand( EXEC_APPEND, "map_restart 0\n" );
 			level.restarted = qtrue;
+			//dynamically set teamsize at the end of a warmup round during team based gametypes
+				if ((counts[TEAM_RED] != g_teamsize.integer || counts[TEAM_BLUE] != g_teamsize.integer) && (GT_Team(level.gametype))) {
+					if (counts[TEAM_RED] > counts[TEAM_BLUE]) {
+						trap_Cvar_Set("teamsize", va("%d", counts[TEAM_RED]));
+					}
+					else {
+						trap_Cvar_Set("teamsize", va("%d", counts[TEAM_BLUE]));
+					}
+				}
 			return;
 		}
 	}
