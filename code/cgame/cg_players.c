@@ -7488,6 +7488,53 @@ doEssentialThree:
 		trap_R_AddRefEntityToScene( &legs );
 	}
 
+	if (cg_spectatorWallHack.integer 
+		&& (cgs.clientinfo[cg.clientNum].team == TEAM_SPECTATOR || (cg.snap && (cg.snap->ps.pm_flags & PMF_FOLLOW))) 
+		&& cg.snap->ps.clientNum != cent->currentState.number 
+		&& !(cent->currentState.eFlags & EF_DEAD) 
+		&& !(cg.snap->ps.fd.forcePowersActive & (1 << FP_SEE)))
+	{
+		trace_t trace;
+
+		CG_Trace(&trace, cg.refdef.vieworg, NULL, NULL, cent->lerpOrigin, cg.snap->ps.clientNum, CONTENTS_SOLID);
+
+		if (trace.fraction != 1.0f)
+		{
+			if (GT_Team(cgs.gametype))
+			{	// A team game
+				switch (cgs.clientinfo[cent->currentState.clientNum].team)
+				{
+				case TEAM_RED:
+					legs.shaderRGBA[0] = 255;
+					legs.shaderRGBA[1] = 0;
+					legs.shaderRGBA[2] = 0;
+					break;
+				case TEAM_BLUE:
+					legs.shaderRGBA[0] = 0;
+					legs.shaderRGBA[1] = 0;
+					legs.shaderRGBA[2] = 255;
+					break;
+
+				default:
+					legs.shaderRGBA[0] = 255;
+					legs.shaderRGBA[1] = 255;
+					legs.shaderRGBA[2] = 0;
+					break;
+				}
+			}
+			else
+			{	// Not a team game
+				legs.shaderRGBA[0] = 255;
+				legs.shaderRGBA[1] = 255;
+				legs.shaderRGBA[2] = 0;
+			}
+
+			legs.renderfx |= RF_DEPTHHACK;
+			legs.customShader = cgs.media.sightShell;
+			trap_R_AddRefEntityToScene(&legs);
+		}
+	}
+
 	// Electricity
 	//------------------------------------------------
 	if ( cent->currentState.emplacedOwner > cg.gameTime )
