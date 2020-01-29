@@ -1315,7 +1315,7 @@ void ClientUserinfoChanged( int clientNum ) {
 		trap_SendServerCommand( -1, va("print \"%s" S_COLOR_WHITE " %s %s\n\"",
 				oldname, G_GetStripEdString("SVINGAME", "PLRENAME"),
 				client->info.netname) );
-		G_LogPrintf( LOG_RENAME, "ClientRename: %i %s: %s renamed to %s\n",
+		G_LogPrintf( LOG_RENAME, "ClientRename: %i %s" S_COLOR_WHITE ": %s" S_COLOR_WHITE " renamed to %s\n",
 			clientNum, client->info.netname, oldname, client->info.netname );
 	}
 
