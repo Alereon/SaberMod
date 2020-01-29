@@ -259,18 +259,35 @@ void G_PrintStats(void) {
 
 		PrintStatsHeader(columns);
 
-		PrintStatsSeparator(columns, BG_TeamColor(TEAM_RED));
-		for (i = 0; i < level.numPlayingClients; i++) {
-			cl = level.clients + level.sortedClients[i];
-			if (cl->sess.sessionTeam == TEAM_RED)
-				PrintClientStats(cl, columns, bestStats);
-		}
+		if (level.teamScores[TEAM_RED] > level.teamScores[TEAM_BLUE]) {
+			PrintStatsSeparator(columns, BG_TeamColor(TEAM_RED));
+			for (i = 0; i < level.numPlayingClients; i++) {
+				cl = level.clients + level.sortedClients[i];
+				if (cl->sess.sessionTeam == TEAM_RED)
+					PrintClientStats(cl, columns, bestStats);
+			}
 
-		PrintStatsSeparator(columns, BG_TeamColor(TEAM_BLUE));
-		for (i = 0; i < level.numPlayingClients; i++) {
-			cl = level.clients + level.sortedClients[i];
-			if (cl->sess.sessionTeam == TEAM_BLUE) {
-				PrintClientStats(cl, columns, bestStats);
+			PrintStatsSeparator(columns, BG_TeamColor(TEAM_BLUE));
+			for (i = 0; i < level.numPlayingClients; i++) {
+				cl = level.clients + level.sortedClients[i];
+				if (cl->sess.sessionTeam == TEAM_BLUE) {
+					PrintClientStats(cl, columns, bestStats);
+				}
+			}
+		} else {
+			PrintStatsSeparator(columns, BG_TeamColor(TEAM_BLUE));
+			for (i = 0; i < level.numPlayingClients; i++) {
+				cl = level.clients + level.sortedClients[i];
+				if (cl->sess.sessionTeam == TEAM_BLUE) {
+					PrintClientStats(cl, columns, bestStats);
+				}
+			}
+
+			PrintStatsSeparator(columns, BG_TeamColor(TEAM_RED));
+			for (i = 0; i < level.numPlayingClients; i++) {
+				cl = level.clients + level.sortedClients[i];
+				if (cl->sess.sessionTeam == TEAM_RED)
+					PrintClientStats(cl, columns, bestStats);
 			}
 		}
 	} else {
