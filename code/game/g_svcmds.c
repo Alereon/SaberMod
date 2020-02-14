@@ -818,6 +818,7 @@ static void Svcmd_Items_f( void ) {
 
 	static const struct itemItem_t health[] = {
 		{ "medpak", "item_medpak_instant" },
+		{ "medpac", "item_medpac" },
 		{ "shield_sm", "item_shield_sm_instant" },
 		{ "shield_lrg", "item_shield_lrg_instant" },
 		{ "shield_floor", "misc_shield_floor_unit" }
